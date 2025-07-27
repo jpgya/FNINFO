@@ -1,47 +1,63 @@
 <!DOCTYPE html>
 <html lang="ja">
-
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>フォートナイト便利ツール</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>フォートナイト情報ツール (FLJP API v2)</title>
+  <meta name="description" content="フォートナイトのイベント・ニュース・ビルド・ユーザー検索ができる便利ツール">
   <style>
     body {
-      font-family: 'Segoe UI', sans-serif;
-      margin: 0;
-      padding: 0;
+      font-family: 'Segoe UI', 'Yu Gothic', 'Meiryo', sans-serif;
       background: linear-gradient(to right, #1e3c72, #2a5298);
       color: #fff;
+      margin: 0;
+      min-height: 100vh;
     }
     header {
-      background-color: #141e30;
-      padding: 1rem;
+      background: #141e30;
+      padding: 1.2rem 0 1rem 0;
       text-align: center;
-      font-size: 1.8rem;
+      font-size: 2rem;
       font-weight: bold;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+      letter-spacing: 0.1em;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.25);
     }
     main {
-      padding: 2rem;
+      padding: 2rem 1rem;
+      max-width: 980px;
+      margin: 0 auto;
     }
     section {
-      margin-bottom: 2rem;
-      background-color: rgba(255, 255, 255, 0.1);
+      margin-bottom: 2.5rem;
+      background: rgba(255,255,255,0.08);
       border-radius: 1rem;
-      padding: 1rem 1.5rem;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+      padding: 1.5rem 1.2rem;
+      box-shadow: 0 4px 18px 0 rgba(0,0,0,0.14);
     }
     h2 {
-      font-size: 1.5rem;
+      font-size: 1.4rem;
       border-bottom: 2px solid #fff;
+      margin-bottom: 1rem;
       padding-bottom: 0.3rem;
     }
-    pre {
-      background: #0d1117;
-      padding: 1rem;
-      border-radius: 0.5rem;
-      overflow-x: auto;
-      color: #00ff99;
+    .card-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+    .card {
+      background: rgba(0,0,0,0.13);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.13);
+      border-radius: 0.7rem;
+      padding: 1.2rem;
+      min-width: 250px;
+      flex: 1 1 280px;
+      margin-bottom: 0.8rem;
+      color: #fff;
+      transition: box-shadow 0.2s;
+    }
+    .card:hover {
+      box-shadow: 0 4px 20px rgba(0,255,255,0.18);
     }
     .loader {
       border: 4px solid #f3f3f3;
@@ -50,94 +66,302 @@
       width: 32px;
       height: 32px;
       animation: spin 1s linear infinite;
-      margin: 1rem auto;
+      margin: 1.5rem auto;
+      display: block;
     }
     @keyframes spin {
       0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
+      100% { transform: rotate(360deg);}
+    }
+    .error {
+      color: #ffb3b3;
+      font-weight: bold;
+      margin-top: 1.2rem;
+    }
+    .success {
+      color: #00ffcc;
+      font-weight: bold;
+      margin-top: 1.2rem;
+    }
+    .input-group {
+      display: flex;
+      gap: 0.7rem;
+      margin-top: 0.7rem;
+      margin-bottom: 1.2rem;
+    }
+    input[type="text"] {
+      flex: 1;
+      padding: 0.6em 0.9em;
+      border: 1px solid #ccc;
+      border-radius: 0.4em;
+      font-size: 1em;
+      background: #f7fafd;
+      color: #222;
+    }
+    button {
+      background: linear-gradient(90deg,#00ffd0,#3586ff);
+      border: none;
+      border-radius: 0.4em;
+      padding: 0.6em 1.3em;
+      color: #222;
+      font-weight: bold;
+      font-size: 1em;
+      cursor: pointer;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+      transition: background 0.2s;
+    }
+    button:hover {
+      background: linear-gradient(90deg,#00c0a8,#276bd6);
+      color: #fff;
+    }
+    @media (max-width: 600px) {
+      .card-list { flex-direction: column; }
+      main { padding: 1rem 2vw;}
+      section { padding: 1.2rem 2vw;}
+    }
+    .caption { color: #cce8ff; font-size: 0.97em; margin-bottom: 0.3em;}
+    .platform-badge {
+      display: inline-block;
+      background: #00bac7;
+      color: #07283d;
+      font-size: 0.95em;
+      border-radius: 0.6em;
+      margin-right: 0.4em;
+      padding: 0.13em 0.6em;
+      font-weight: bold;
+      letter-spacing: 0.03em;
     }
   </style>
 </head>
-
 <body>
   <header>
-    フォートナイト 便利ツール
+    フォートナイト情報ツール
   </header>
   <main>
+    <!-- API障害情報 -->
     <section>
-      <h2>イベントフラグ（タイムライン）</h2>
-      <div id="timeline"><div class="loader"></div></div>
+      <h2>API障害情報</h2>
+      <div style="font-size:1em;color:#ffb3b3;">
+        <strong>2025-07-27</strong>：一時的に全エンドポイントで障害（500エラー）が発生しましたが、4:19に復旧しています。<br>
+        エラーが続く場合は時間をおいて再試行してください。
+      </div>
     </section>
+
+    <!-- ニュース一覧 -->
     <section>
-      <h2>ニュースフィード</h2>
+      <h2>最新ニュース</h2>
+      <div class="caption">フォートナイト公式ニュース（日本語で取得可能な場合は日本語）</div>
       <div id="news"><div class="loader"></div></div>
     </section>
+
+    <!-- イベントスケジュール -->
     <section>
-      <h2>最新ビルド情報（PC）</h2>
+      <h2>イベントスケジュール</h2>
+      <div class="caption">現在・今後のゲーム内イベント一覧</div>
+      <div id="timeline"><div class="loader"></div></div>
+    </section>
+
+    <!-- ビルド情報 -->
+    <section>
+      <h2>ビルド情報（全プラットフォーム）</h2>
+      <div class="caption">PC, Switch, PS4, PS5, Xbox, Android, iOSの最新公式ビルド</div>
       <div id="build"><div class="loader"></div></div>
     </section>
+
+    <!-- ユーザー検索 -->
     <section>
-      <h2>サーバーステータス</h2>
-      <div id="status"><div class="loader"></div></div>
+      <h2>ユーザー検索（Epicアカウント）</h2>
+      <div class="caption">Epicのユーザー名からアカウントIDなどを調べられます</div>
+      <form id="user-form" autocomplete="off">
+        <div class="input-group">
+          <input type="text" id="epic-name" placeholder="Epicユーザー名を入力" required>
+          <button type="submit">検索</button>
+        </div>
+      </form>
+      <div id="user-result"></div>
     </section>
   </main>
-
   <script>
+    // ==== 汎用関数 ====
     const BASE_URL = 'https://fljpapi.com/api/v2';
 
-    async function fetchAndDisplay(endpoint, targetId, formatter) {
+    // 日付を日本語（東京タイムゾーン）で整形
+    function toJpDate(str) {
+      if (!str) return '不明';
       try {
-        const res = await fetch(`${BASE_URL}/${endpoint}`);
-        if (!res.ok) throw new Error(`Error: ${res.status}`);
-        const data = await res.json();
-        document.getElementById(targetId).innerHTML = formatter(data);
-      } catch (err) {
-        document.getElementById(targetId).innerHTML = `<p style="color: red">データの取得に失敗しました。(${err.message})</p>`;
+        return new Date(str).toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo' });
+      } catch {
+        return str;
       }
     }
 
-    fetchAndDisplay('timeline', 'timeline', data => {
-  // 正しいパスでイベント配列を取得
-  const events = data?.channels?.['client-events']?.states?.[0]?.state?.activeEvents;
-  if (!Array.isArray(events) || events.length === 0) {
-    return '<p>現在、表示できるイベントはありません。</p>';
-  }
-  return `<ul>
-    ${events.map(ev => `
-      <li style="margin-bottom:1em;">
-        <strong>イベントタイプ：</strong> ${ev.eventType || '不明'}<br>
-        <strong>開始：</strong> ${ev.activeSince ? new Date(ev.activeSince).toLocaleString('ja-JP') : '不明'}<br>
-        <strong>終了：</strong> ${ev.activeUntil ? new Date(ev.activeUntil).toLocaleString('ja-JP') : '不明'}
-      </li>
-    `).join('')}
-  </ul>`;
-});
+    // イベントタイプを「日本語っぽく」自動整形
+    function formatEventTypeJa(type) {
+      if (!type) return '不明なイベント';
+      // 例: EventFlag.Event_DelMar_Season01_Dailies → デルマー シーズン01 デイリー
+      let s = type
+        .replace(/^EventFlag\./, '')    // EventFlag.削除
+        .replace(/_/g, ' ')             // アンダースコア→スペース
+        .replace(/([A-Z])/g, ' $1')     // 大文字の前にスペース
+        .replace(/\s+/, ' ')            // 連続スペース1つに
+        .trim();
+      // 数字→全角（日本語っぽさUP）
+      s = s.replace(/\d+/g, m => m.replace(/[0-9]/g, d => '０１２３４５６７８９'[d]));
+      // 先頭・末尾の空白除去
+      return s;
+    }
 
-    fetchAndDisplay('news?platform=pc&language=ja', 'news', data => {
-      if (!data.messages) return '<p>ニュースなし</p>';
-      return data.messages.map(msg => `
-        <div>
-          <h3>${msg.title}</h3>
-          <p>${msg.body}</p>
-        </div>
-      `).join('');
+    // 汎用: API取得＋描画
+    async function fetchAndDisplay(endpoint, targetId, formatter) {
+      const target = document.getElementById(targetId);
+      target.innerHTML = '<div class="loader"></div>';
+      try {
+        const res = await fetch(`${BASE_URL}${endpoint}`);
+        if (!res.ok) {
+          let msg = 'APIエラー: ' + res.status;
+          if (res.status === 429) msg += '（リクエスト過多。20秒ほど空けて再試行してください）';
+          if (res.status === 403) msg += '（連続アクセス制限。時間を空けてください）';
+          if (res.status === 500) msg += '（サーバー障害の可能性。時間をおいて再試行を）';
+          throw new Error(msg);
+        }
+        const data = await res.json();
+        target.innerHTML = formatter(data);
+      } catch (err) {
+        target.innerHTML = `<div class="error">データ取得失敗: ${err.message}</div>`;
+      }
+    }
+
+    // ==== ニュース ====
+    fetchAndDisplay('/news?platform=pc&language=ja', 'news', data => {
+      if (!data || !Array.isArray(data.messages) || data.messages.length === 0) {
+        return '<div class="error">現在ニュースはありません。</div>';
+      }
+      return `<div class="card-list">
+        ${data.messages.map(msg => `
+          <div class="card">
+            <strong>${msg.title || 'タイトルなし'}</strong>
+            <div style="font-size:0.97em; margin:0.8em 0 0.2em 0; color:#b4eaff;">${toJpDate(msg.time)}</div>
+            <div>${msg.body || ''}</div>
+          </div>
+        `).join('')}
+      </div>`;
     });
 
-    fetchAndDisplay('build/Windows', 'build', data => {
-      return `<ul>
-        <li><strong>バージョン:</strong> ${data.version}</li>
-        <li><strong>ブランチ:</strong> ${data.branch}</li>
-        <li><strong>ビルド日:</strong> ${new Date(data.date).toLocaleString()}</li>
-      </ul>`;
+    // ==== イベントスケジュール ====
+    fetchAndDisplay('/timeline', 'timeline', data => {
+      let allEvents = [];
+      for (const ch of Object.values(data.channels || {})) {
+        for (const state of ch.states || []) {
+          if (Array.isArray(state.activeEvents)) {
+            allEvents = allEvents.concat(state.activeEvents);
+          }
+          if (state.state && Array.isArray(state.state.activeEvents)) {
+            allEvents = allEvents.concat(state.state.activeEvents);
+          }
+        }
+      }
+      // 重複排除
+      const seen = new Set();
+      allEvents = allEvents.filter(ev => {
+        const key = ev.eventType + '_' + (ev.activeSince || ev.eventStart || '');
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+      if (allEvents.length === 0) {
+        return '<div class="error">現在、表示できるイベントはありません。</div>';
+      }
+      return `<div class="card-list">
+        ${allEvents.map(ev => `
+          <div class="card">
+            <strong style="font-size:1.08em;">${formatEventTypeJa(ev.eventType)}</strong>
+            <div style="font-size:0.98em; color:#b4eaff; margin:0.6em 0 0.2em 0;">
+              開始: ${toJpDate(ev.activeSince || ev.eventStart)}
+              <br>終了: ${toJpDate(ev.activeUntil || ev.eventEnd)}
+            </div>
+            <div style="font-size:0.96em; margin-top:0.5em;">
+              ${ev.eventName ? `<div>イベント名: ${ev.eventName}</div>` : ''}
+              ${ev.devName ? `<div style="color:#a8f0f0;">開発者名: ${ev.devName}</div>` : ''}
+              ${ev.description ? `<div>${ev.description}</div>` : ''}
+            </div>
+          </div>
+        `).join('')}
+      </div>`;
     });
 
-    fetchAndDisplay('fortnitestatus', 'status', data => {
-      return `<ul>
-        <li><strong>全体ステータス:</strong> ${data.status}</li>
-        <li><strong>詳細:</strong> ${data.message}</li>
-      </ul>`;
+    // ==== ビルド情報 ====
+    const platforms = [
+      {key: 'Windows', label: 'PC'},
+      {key: 'Switch', label: 'Switch'},
+      {key: 'PS4', label: 'PS4'},
+      {key: 'PS5', label: 'PS5'},
+      {key: 'XboxOne', label: 'Xbox One'},
+      {key: 'XboxSeries', label: 'Xbox Series'},
+      {key: 'Android', label: 'Android'},
+      {key: 'iOS', label: 'iOS'}
+    ];
+    async function fetchAllBuilds() {
+      const target = document.getElementById('build');
+      target.innerHTML = '<div class="loader"></div>';
+      let results = [];
+      for (let i = 0; i < platforms.length; i++) {
+        const plat = platforms[i];
+        try {
+          const res = await fetch(`${BASE_URL}/build/${plat.key}`);
+          if (!res.ok) throw new Error(`${plat.label}：取得エラー (${res.status})`);
+          const data = await res.json();
+          results.push({plat, info: data});
+        } catch (err) {
+          results.push({plat, info: null, error: err.message});
+        }
+      }
+      target.innerHTML = `<div class="card-list">
+        ${results.map(({plat, info, error}) => `
+          <div class="card">
+            <span class="platform-badge">${plat.label}</span><br>
+            ${error ? `<div class="error">${error}</div>` : info ? `
+            <ul style="padding-left:0.9em;margin:0.7em 0 0 0;">
+              <li><strong>バージョン:</strong> ${info.version || '不明'}</li>
+              <li><strong>ブランチ:</strong> ${info.branch || '不明'}</li>
+              <li><strong>ビルド日:</strong> ${toJpDate(info.date)}</li>
+            </ul>
+            ` : '<div>情報なし</div>'}
+          </div>
+        `).join('')}
+      </div>`;
+    }
+    fetchAllBuilds();
+
+    // ==== ユーザー検索 ====
+    document.getElementById('user-form').addEventListener('submit', async e => {
+      e.preventDefault();
+      const resultDom = document.getElementById('user-result');
+      const name = document.getElementById('epic-name').value.trim();
+      if (!name) {
+        resultDom.innerHTML = '<div class="error">ユーザー名を入力してください。</div>';
+        return;
+      }
+      resultDom.innerHTML = '<div class="loader"></div>';
+      try {
+        const res = await fetch(`${BASE_URL}/lookup?platform=epic&username=${encodeURIComponent(name)}`);
+        if (!res.ok) throw new Error('APIエラー: ' + res.status);
+        const data = await res.json();
+        if (!data || !data.result || !data.result.account_id) {
+          throw new Error('該当ユーザーが見つかりませんでした');
+        }
+        resultDom.innerHTML = `
+          <div class="card">
+            <strong>Epicユーザー名:</strong> ${data.result.username}<br>
+            <strong>アカウントID:</strong> ${data.result.account_id}<br>
+            ${data.result.platform ? `<strong>プラットフォーム:</strong> ${data.result.platform}<br>` : ''}
+            ${data.result.avatar ? `<img src="${data.result.avatar}" alt="アイコン" style="margin:0.5em 0; max-width:80px; border-radius:50%;">` : ''}
+          </div>
+          <div class="success">ユーザー情報を取得しました。</div>
+        `;
+      } catch (err) {
+        resultDom.innerHTML = `<div class="error">ユーザー情報取得失敗: ${err.message}</div>`;
+      }
     });
   </script>
 </body>
-
 </html>
