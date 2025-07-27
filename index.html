@@ -228,8 +228,6 @@
             if (f.TeaserTitle && f.TeaserTitle !== "​") html += `<li><strong>サブタイトル:</strong> ${f.TeaserTitle}</li>`;
             if (Array.isArray(f.FullScreenBackground?.Image) && f.FullScreenBackground.Image.length > 0)
               html += `<li><img src="${f.FullScreenBackground.Image[0].url}" alt="画像" style="max-width:100%;border-radius:0.5em;"></li>`;
-            if (Array.isArray(f.TeaserBackground?.Image) && f.TeaserBackground.Image.length > 0)
-              html += `<li><img src="${f.TeaserBackground.Image[0].url}" alt="画像" style="max-width:100%;border-radius:0.5em;"></li>`;
             if (Array.isArray(f.Buttons)) {
               html += f.Buttons.map(btn => {
                 if (btn.Text) return `<li><button disabled style="background:#00bac7;color:#07283d;border:none;padding:0.4em 1em;border-radius:0.5em;margin:0.2em 0;">${btn.Text}</button></li>`;
