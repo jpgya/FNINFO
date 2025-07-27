@@ -209,25 +209,35 @@
       const dom = document.getElementById('news');
       dom.innerHTML = '<div class="loader"></div>';
       try {
+        // ここだけ公式APIの返却例に合わせてパース
         const res = await fetch(`${BASE_URL}/news?platform=pc&language=ja`);
         if(!res.ok) throw new Error(`APIエラー: ${res.status}`);
         const data = await res.json();
-        if (!data || !Array.isArray(data.messages) || data.messages.length === 0) {
+        const items = (data.data && data.data.contentItems) || [];
+        if (!items.length) {
           dom.innerHTML = '<div class="error">現在ニュースはありません。</div>';
           return;
         }
         dom.innerHTML = `<div class="card-list">
-          ${data.messages.map(msg => {
-            let items = [];
-            if(msg.title) items.push(`<li><strong>タイトル:</strong> ${msg.title}</li>`);
-            if(msg.body) items.push(`<li>${msg.body}</li>`);
-            if(msg.time) items.push(`<li><span style="color:#b4eaff;">${toJpDate(msg.time)}</span></li>`);
-            if(msg.image) items.push(`<li><img src="${msg.image}" alt="画像" style="max-width:100%;border-radius:0.5em;"></li>`);
-            return `
-              <div class="card">
-                <ul class="info-list">${items.join('')}</ul>
-              </div>
-            `;
+          ${items.map(msg => {
+            const f = msg.contentFields || {};
+            let html = '';
+            html += `<ul class="info-list">`;
+            if (f.FullScreenTitle) html += `<li><strong>タイトル:</strong> ${f.FullScreenTitle}</li>`;
+            if (f.FullScreenBody) html += `<li>${f.FullScreenBody}</li>`;
+            if (f.TeaserTitle && f.TeaserTitle !== "​") html += `<li><strong>サブタイトル:</strong> ${f.TeaserTitle}</li>`;
+            if (Array.isArray(f.FullScreenBackground?.Image) && f.FullScreenBackground.Image.length > 0)
+              html += `<li><img src="${f.FullScreenBackground.Image[0].url}" alt="画像" style="max-width:100%;border-radius:0.5em;"></li>`;
+            if (Array.isArray(f.TeaserBackground?.Image) && f.TeaserBackground.Image.length > 0)
+              html += `<li><img src="${f.TeaserBackground.Image[0].url}" alt="画像" style="max-width:100%;border-radius:0.5em;"></li>`;
+            if (Array.isArray(f.Buttons)) {
+              html += f.Buttons.map(btn => {
+                if (btn.Text) return `<li><button disabled style="background:#00bac7;color:#07283d;border:none;padding:0.4em 1em;border-radius:0.5em;margin:0.2em 0;">${btn.Text}</button></li>`;
+                return '';
+              }).join('');
+            }
+            html += `</ul>`;
+            return `<div class="card">${html}</div>`;
           }).join('')}
         </div>`;
       } catch(err) {
@@ -288,7 +298,6 @@
     async function fetchAllBuilds() {
       const target = document.getElementById('build');
       target.innerHTML = '<div class="loader"></div>';
-
       let platforms = [];
       try {
         const lookup = await fetch(`${BASE_URL}/build/platforms`);
