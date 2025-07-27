@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>フォートナイト便利ツール</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      margin: 0;
+      padding: 0;
+      background: linear-gradient(to right, #1e3c72, #2a5298);
+      color: #fff;
+    }
+    header {
+      background-color: #141e30;
+      padding: 1rem;
+      text-align: center;
+      font-size: 1.8rem;
+      font-weight: bold;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    }
+    main {
+      padding: 2rem;
+    }
+    section {
+      margin-bottom: 2rem;
+      background-color: rgba(255, 255, 255, 0.1);
+      border-radius: 1rem;
+      padding: 1rem 1.5rem;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
+    h2 {
+      font-size: 1.5rem;
+      border-bottom: 2px solid #fff;
+      padding-bottom: 0.3rem;
+    }
+    pre {
+      background: #0d1117;
+      padding: 1rem;
+      border-radius: 0.5rem;
+      overflow-x: auto;
+      color: #00ff99;
+    }
+    .loader {
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid #00ffcc;
+      border-radius: 50%;
+      width: 32px;
+      height: 32px;
+      animation: spin 1s linear infinite;
+      margin: 1rem auto;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    フォートナイト 便利ツール
+  </header>
+  <main>
+    <section>
+      <h2>イベントフラグ（タイムライン）</h2>
+      <div id="timeline"><div class="loader"></div></div>
+    </section>
+    <section>
+      <h2>ニュースフィード</h2>
+      <div id="news"><div class="loader"></div></div>
+    </section>
+    <section>
+      <h2>最新ビルド情報（PC）</h2>
+      <div id="build"><div class="loader"></div></div>
+    </section>
+    <section>
+      <h2>サーバーステータス</h2>
+      <div id="status"><div class="loader"></div></div>
+    </section>
+  </main>
+
+  <script>
+    const BASE_URL = 'https://fljpapi.com/api/v2';
+
+    async function fetchAndDisplay(endpoint, targetId, formatter) {
+      try {
+        const res = await fetch(`${BASE_URL}/${endpoint}`);
+        if (!res.ok) throw new Error(`Error: ${res.status}`);
+        const data = await res.json();
+        document.getElementById(targetId).innerHTML = formatter(data);
+      } catch (err) {
+        document.getElementById(targetId).innerHTML = `<p style="color: red">データの取得に失敗しました。(${err.message})</p>`;
+      }
+    }
+
+    fetchAndDisplay('timeline', 'timeline', data => {
+      return `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+    });
+
+    fetchAndDisplay('news?platform=pc&language=ja', 'news', data => {
+      if (!data.messages) return '<p>ニュースなし</p>';
+      return data.messages.map(msg => `
+        <div>
+          <h3>${msg.title}</h3>
+          <p>${msg.body}</p>
+        </div>
+      `).join('');
+    });
+
+    fetchAndDisplay('build/Windows', 'build', data => {
+      return `<ul>
+        <li><strong>バージョン:</strong> ${data.version}</li>
+        <li><strong>ブランチ:</strong> ${data.branch}</li>
+        <li><strong>ビルド日:</strong> ${new Date(data.date).toLocaleString()}</li>
+      </ul>`;
+    });
+
+    fetchAndDisplay('fortnitestatus', 'status', data => {
+      return `<ul>
+        <li><strong>全体ステータス:</strong> ${data.status}</li>
+        <li><strong>詳細:</strong> ${data.message}</li>
+      </ul>`;
+    });
+  </script>
+</body>
+
+</html>
