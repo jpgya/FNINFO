@@ -237,16 +237,19 @@
     fetchNews();
 
     // イベント
-    async function fetchTimeline() {
+    async function fetchTimelineV2() {
       const dom = document.getElementById('timeline');
       dom.innerHTML = '<div class="loader"></div>';
       try {
         const res = await fetch(`${BASE_URL}/timeline`);
         if(!res.ok) throw new Error(`APIエラー: ${res.status}`);
-        const data = await res.json();
+        const raw = await res.json();
+        const data = raw.data || {};
         let allEvents = [];
-        for (const ch of Object.values(data.channels || {})) {
-          for (const state of ch.states || []) {
+        // client-events チャンネルの activeEvents/activeEvents
+        const ch = data.channels && data.channels['client-events'];
+        if (ch && ch.states) {
+          for (const state of ch.states) {
             if (Array.isArray(state.activeEvents)) allEvents = allEvents.concat(state.activeEvents);
             if (state.state && Array.isArray(state.state.activeEvents)) allEvents = allEvents.concat(state.state.activeEvents);
           }
@@ -254,7 +257,7 @@
         // 重複排除
         const seen = new Set();
         allEvents = allEvents.filter(ev => {
-          const key = ev.eventType + '_' + (ev.activeSince || ev.eventStart || '');
+          const key = (ev.eventType || '') + '_' + (ev.activeSince || ev.eventStart || '');
           if (seen.has(key)) return false;
           seen.add(key);
           return true;
@@ -266,31 +269,26 @@
         dom.innerHTML = `<div class="card-list">
           ${allEvents.map(ev => {
             let items = [];
-            if(ev.eventType) items.push(`<li><strong>種別:</strong> ${formatEventTypeJa(ev.eventType)}</li>`);
-            if(ev.eventName) items.push(`<li><strong>イベント名:</strong> ${ev.eventName}</li>`);
-            if(ev.devName) items.push(`<li><strong>開発者名:</strong> ${ev.devName}</li>`);
-            if(ev.activeSince || ev.eventStart) items.push(`<li>開始: ${toJpDate(ev.activeSince || ev.eventStart)}</li>`);
-            if(ev.activeUntil || ev.eventEnd) items.push(`<li>終了: ${toJpDate(ev.activeUntil || ev.eventEnd)}</li>`);
-            if(ev.description) items.push(`<li>${ev.description}</li>`);
-            return `
-              <div class="card">
-                <ul class="info-list">${items.join('')}</ul>
-              </div>
-            `;
+            if (ev.eventType) items.push(`<li><strong>種別:</strong> ${formatEventTypeJa(ev.eventType)}</li>`);
+            if (ev.eventName) items.push(`<li><strong>イベント名:</strong> ${ev.eventName}</li>`);
+            if (ev.devName) items.push(`<li><strong>開発者名:</strong> ${ev.devName}</li>`);
+            if (ev.activeSince || ev.eventStart) items.push(`<li>開始: ${toJpDate(ev.activeSince || ev.eventStart)}</li>`);
+            if (ev.activeUntil || ev.eventEnd) items.push(`<li>終了: ${toJpDate(ev.activeUntil || ev.eventEnd)}</li>`);
+            if (ev.description) items.push(`<li>${ev.description}</li>`);
+            return `<div class="card"><ul class="info-list">${items.join('')}</ul></div>`;
           }).join('')}
         </div>`;
       } catch(err) {
         dom.innerHTML = `<div class="error">取得失敗: ${err.message}</div>`;
       }
     }
-    fetchTimeline();
+    fetchTimelineV2();
 
     // ビルド情報
     async function fetchAllBuilds() {
       const target = document.getElementById('build');
       target.innerHTML = '<div class="loader"></div>';
 
-      // 利用可能なプラットフォーム一覧を先に取得
       let platforms = [];
       try {
         const lookup = await fetch(`${BASE_URL}/build/platforms`);
