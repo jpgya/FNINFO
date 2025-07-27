@@ -97,7 +97,7 @@
     }
 
     fetchAndDisplay('timeline', 'timeline', data => {
-  // 安全にデータ取得
+  // 正しいパスでイベント配列を取得
   const events = data?.channels?.['client-events']?.states?.[0]?.state?.activeEvents;
   if (!Array.isArray(events) || events.length === 0) {
     return '<p>現在、表示できるイベントはありません。</p>';
@@ -105,14 +105,13 @@
   return `<ul>
     ${events.map(ev => `
       <li style="margin-bottom:1em;">
-        <strong>イベント名：</strong> ${ev.eventName || ev.eventType || '不明'}<br>
-        <strong>開始：</strong> ${ev.eventStart ? new Date(ev.eventStart).toLocaleString('ja-JP') : '不明'}<br>
-        <strong>終了：</strong> ${ev.eventEnd ? new Date(ev.eventEnd).toLocaleString('ja-JP') : '不明'}<br>
-        <strong>タイプ：</strong> ${ev.eventType || '不明'}
+        <strong>イベントタイプ：</strong> ${ev.eventType || '不明'}<br>
+        <strong>開始：</strong> ${ev.activeSince ? new Date(ev.activeSince).toLocaleString('ja-JP') : '不明'}<br>
+        <strong>終了：</strong> ${ev.activeUntil ? new Date(ev.activeUntil).toLocaleString('ja-JP') : '不明'}
       </li>
     `).join('')}
-  　　</ul>`;
-　　});
+  </ul>`;
+});
 
     fetchAndDisplay('news?platform=pc&language=ja', 'news', data => {
       if (!data.messages) return '<p>ニュースなし</p>';
