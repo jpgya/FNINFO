@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1.0">
-  <title>フォートナイト情報ツール</title>
+  <title>フォートナイト情報ツール (FLJP API v2)</title>
   <meta name="description" content="フォートナイトのイベント・ニュース・ビルド・ユーザー検索ができる便利ツール">
   <style>
     body {
@@ -55,6 +55,7 @@
       margin-bottom: 0.8rem;
       color: #fff;
       transition: box-shadow 0.2s;
+      word-break: break-word;
     }
     .card:hover {
       box-shadow: 0 4px 20px rgba(0,255,255,0.18);
@@ -131,6 +132,15 @@
       font-weight: bold;
       letter-spacing: 0.03em;
     }
+    ul.info-list {
+      list-style: none;
+      padding-left: 0;
+      margin: 0.7em 0 0 0;
+    }
+    ul.info-list li {
+      margin-bottom: 0.2em;
+      font-size: 0.98em;
+    }
   </style>
 </head>
 <body>
@@ -138,43 +148,38 @@
     フォートナイト情報ツール
   </header>
   <main>
-    <!-- API障害情報 -->
     <section>
       <h2>API障害情報</h2>
       <div style="font-size:1em;color:#ffb3b3;">
-        <strong>2025-07-27</strong>：一時的に全エンドポイントで障害（500エラー）が発生しましたが、4:19に復旧しています。<br>
+        <strong>2025-07-27</strong> 一時的に全エンドポイントで障害（500エラー）が発生しましたが、4:19に復旧しています。<br>
         エラーが続く場合は時間をおいて再試行してください。
       </div>
     </section>
 
-    <!-- ニュース一覧 -->
     <section>
       <h2>最新ニュース</h2>
       <div class="caption">フォートナイト公式ニュース（日本語で取得可能な場合は日本語）</div>
       <div id="news"><div class="loader"></div></div>
     </section>
 
-    <!-- イベントスケジュール -->
     <section>
       <h2>イベントスケジュール</h2>
       <div class="caption">現在・今後のゲーム内イベント一覧</div>
       <div id="timeline"><div class="loader"></div></div>
     </section>
 
-    <!-- ビルド情報 -->
     <section>
       <h2>ビルド情報（全プラットフォーム）</h2>
       <div class="caption">PC, Switch, PS4, PS5, Xbox, Android, iOSの最新公式ビルド</div>
       <div id="build"><div class="loader"></div></div>
     </section>
 
-    <!-- ユーザー検索 -->
     <section>
       <h2>ユーザー検索（Epicアカウント）</h2>
       <div class="caption">Epicのユーザー名からアカウントIDなどを調べられます</div>
       <form id="user-form" autocomplete="off">
         <div class="input-group">
-          <input type="text" id="epic-name" placeholder="Epicユーザー名を入力" required>
+          <input type="text" id="epic-name" placeholder="Epicユーザー名またはアカウントIDを入力" required>
           <button type="submit">検索</button>
         </div>
       </form>
@@ -182,10 +187,7 @@
     </section>
   </main>
   <script>
-    // ==== 汎用関数 ====
     const BASE_URL = 'https://fljpapi.com/api/v2';
-
-    // 日付を日本語（東京タイムゾーン）で整形
     function toJpDate(str) {
       if (!str) return '不明';
       try {
@@ -194,102 +196,99 @@
         return str;
       }
     }
-
-    // イベントタイプを「日本語っぽく」自動整形
     function formatEventTypeJa(type) {
       if (!type) return '不明なイベント';
-      // 例: EventFlag.Event_DelMar_Season01_Dailies → デルマー シーズン01 デイリー
       let s = type
-        .replace(/^EventFlag\./, '')    // EventFlag.削除
-        .replace(/_/g, ' ')             // アンダースコア→スペース
-        .replace(/([A-Z])/g, ' $1')     // 大文字の前にスペース
-        .replace(/\s+/, ' ')            // 連続スペース1つに
+        .replace(/^EventFlag\./, '')    
+        .replace(/_/g, ' ')             
+        .replace(/([A-Z])/g, ' $1')     
+        .replace(/\s+/, ' ')            
         .trim();
-      // 数字→全角（日本語っぽさUP）
       s = s.replace(/\d+/g, m => m.replace(/[0-9]/g, d => '０１２３４５６７８９'[d]));
-      // 先頭・末尾の空白除去
       return s;
     }
 
-    // 汎用: API取得＋描画
-    async function fetchAndDisplay(endpoint, targetId, formatter) {
-      const target = document.getElementById(targetId);
-      target.innerHTML = '<div class="loader"></div>';
+    /** ニュース：「取得できた項目だけ」表示 */
+    async function fetchNews() {
+      const dom = document.getElementById('news');
+      dom.innerHTML = '<div class="loader"></div>';
       try {
-        const res = await fetch(`${BASE_URL}${endpoint}`);
-        if (!res.ok) {
-          let msg = 'APIエラー: ' + res.status;
-          if (res.status === 429) msg += '（リクエスト過多。20秒ほど空けて再試行してください）';
-          if (res.status === 403) msg += '（連続アクセス制限。時間を空けてください）';
-          if (res.status === 500) msg += '（サーバー障害の可能性。時間をおいて再試行を）';
-          throw new Error(msg);
-        }
+        const res = await fetch(`${BASE_URL}/news?platform=pc&language=ja`);
+        if(!res.ok) throw new Error(`APIエラー: ${res.status}`);
         const data = await res.json();
-        target.innerHTML = formatter(data);
-      } catch (err) {
-        target.innerHTML = `<div class="error">データ取得失敗: ${err.message}</div>`;
+        if (!data || !Array.isArray(data.messages) || data.messages.length === 0) {
+          dom.innerHTML = '<div class="error">現在ニュースはありません。</div>';
+          return;
+        }
+        dom.innerHTML = `<div class="card-list">
+          ${data.messages.map(msg => {
+            let items = [];
+            if(msg.title) items.push(`<li><strong>タイトル:</strong> ${msg.title}</li>`);
+            if(msg.body) items.push(`<li>${msg.body}</li>`);
+            if(msg.time) items.push(`<li><span style="color:#b4eaff;">${toJpDate(msg.time)}</span></li>`);
+            if(msg.image) items.push(`<li><img src="${msg.image}" alt="画像" style="max-width:100%;border-radius:0.5em;"></li>`);
+            return `
+              <div class="card">
+                <ul class="info-list">${items.join('')}</ul>
+              </div>
+            `;
+          }).join('')}
+        </div>`;
+      } catch(err) {
+        dom.innerHTML = `<div class="error">取得失敗: ${err.message}</div>`;
       }
     }
+    fetchNews();
 
-    // ==== ニュース ====
-    fetchAndDisplay('/news?platform=pc&language=ja', 'news', data => {
-      if (!data || !Array.isArray(data.messages) || data.messages.length === 0) {
-        return '<div class="error">現在ニュースはありません。</div>';
-      }
-      return `<div class="card-list">
-        ${data.messages.map(msg => `
-          <div class="card">
-            <strong>${msg.title || 'タイトルなし'}</strong>
-            <div style="font-size:0.97em; margin:0.8em 0 0.2em 0; color:#b4eaff;">${toJpDate(msg.time)}</div>
-            <div>${msg.body || ''}</div>
-          </div>
-        `).join('')}
-      </div>`;
-    });
-
-    // ==== イベントスケジュール ====
-    fetchAndDisplay('/timeline', 'timeline', data => {
-      let allEvents = [];
-      for (const ch of Object.values(data.channels || {})) {
-        for (const state of ch.states || []) {
-          if (Array.isArray(state.activeEvents)) {
-            allEvents = allEvents.concat(state.activeEvents);
-          }
-          if (state.state && Array.isArray(state.state.activeEvents)) {
-            allEvents = allEvents.concat(state.state.activeEvents);
+    /** イベント：「取得できた項目だけ」表示 */
+    async function fetchTimeline() {
+      const dom = document.getElementById('timeline');
+      dom.innerHTML = '<div class="loader"></div>';
+      try {
+        const res = await fetch(`${BASE_URL}/timeline`);
+        if(!res.ok) throw new Error(`APIエラー: ${res.status}`);
+        const data = await res.json();
+        let allEvents = [];
+        for (const ch of Object.values(data.channels || {})) {
+          for (const state of ch.states || []) {
+            if (Array.isArray(state.activeEvents)) allEvents = allEvents.concat(state.activeEvents);
+            if (state.state && Array.isArray(state.state.activeEvents)) allEvents = allEvents.concat(state.state.activeEvents);
           }
         }
+        const seen = new Set();
+        allEvents = allEvents.filter(ev => {
+          const key = ev.eventType + '_' + (ev.activeSince || ev.eventStart || '');
+          if (seen.has(key)) return false;
+          seen.add(key);
+          return true;
+        });
+        if (allEvents.length === 0) {
+          dom.innerHTML = '<div class="error">現在、表示できるイベントはありません。</div>';
+          return;
+        }
+        dom.innerHTML = `<div class="card-list">
+          ${allEvents.map(ev => {
+            let items = [];
+            if(ev.eventType) items.push(`<li><strong>種別:</strong> ${formatEventTypeJa(ev.eventType)}</li>`);
+            if(ev.eventName) items.push(`<li><strong>イベント名:</strong> ${ev.eventName}</li>`);
+            if(ev.devName) items.push(`<li><strong>開発者名:</strong> ${ev.devName}</li>`);
+            if(ev.activeSince || ev.eventStart) items.push(`<li>開始: ${toJpDate(ev.activeSince || ev.eventStart)}</li>`);
+            if(ev.activeUntil || ev.eventEnd) items.push(`<li>終了: ${toJpDate(ev.activeUntil || ev.eventEnd)}</li>`);
+            if(ev.description) items.push(`<li>${ev.description}</li>`);
+            return `
+              <div class="card">
+                <ul class="info-list">${items.join('')}</ul>
+              </div>
+            `;
+          }).join('')}
+        </div>`;
+      } catch(err) {
+        dom.innerHTML = `<div class="error">取得失敗: ${err.message}</div>`;
       }
-      // 重複排除
-      const seen = new Set();
-      allEvents = allEvents.filter(ev => {
-        const key = ev.eventType + '_' + (ev.activeSince || ev.eventStart || '');
-        if (seen.has(key)) return false;
-        seen.add(key);
-        return true;
-      });
-      if (allEvents.length === 0) {
-        return '<div class="error">現在、表示できるイベントはありません。</div>';
-      }
-      return `<div class="card-list">
-        ${allEvents.map(ev => `
-          <div class="card">
-            <strong style="font-size:1.08em;">${formatEventTypeJa(ev.eventType)}</strong>
-            <div style="font-size:0.98em; color:#b4eaff; margin:0.6em 0 0.2em 0;">
-              開始: ${toJpDate(ev.activeSince || ev.eventStart)}
-              <br>終了: ${toJpDate(ev.activeUntil || ev.eventEnd)}
-            </div>
-            <div style="font-size:0.96em; margin-top:0.5em;">
-              ${ev.eventName ? `<div>イベント名: ${ev.eventName}</div>` : ''}
-              ${ev.devName ? `<div style="color:#a8f0f0;">開発者名: ${ev.devName}</div>` : ''}
-              ${ev.description ? `<div>${ev.description}</div>` : ''}
-            </div>
-          </div>
-        `).join('')}
-      </div>`;
-    });
+    }
+    fetchTimeline();
 
-    // ==== ビルド情報 ====
+    /** ビルド情報：「取得できた項目だけ」表示 */
     const platforms = [
       {key: 'Windows', label: 'PC'},
       {key: 'Switch', label: 'Switch'},
@@ -304,59 +303,70 @@
       const target = document.getElementById('build');
       target.innerHTML = '<div class="loader"></div>';
       let results = [];
-      for (let i = 0; i < platforms.length; i++) {
-        const plat = platforms[i];
+      for (const plat of platforms) {
         try {
           const res = await fetch(`${BASE_URL}/build/${plat.key}`);
           if (!res.ok) throw new Error(`${plat.label}：取得エラー (${res.status})`);
           const data = await res.json();
           results.push({plat, info: data});
         } catch (err) {
-          results.push({plat, info: null, error: err.message});
+          results.push({plat, error: err.message});
         }
       }
       target.innerHTML = `<div class="card-list">
-        ${results.map(({plat, info, error}) => `
-          <div class="card">
-            <span class="platform-badge">${plat.label}</span><br>
-            ${error ? `<div class="error">${error}</div>` : info ? `
-            <ul style="padding-left:0.9em;margin:0.7em 0 0 0;">
-              <li><strong>バージョン:</strong> ${info.version || '不明'}</li>
-              <li><strong>ブランチ:</strong> ${info.branch || '不明'}</li>
-              <li><strong>ビルド日:</strong> ${toJpDate(info.date)}</li>
-            </ul>
-            ` : '<div>情報なし</div>'}
-          </div>
-        `).join('')}
+        ${results.map(({plat, info, error}) => {
+          let items = [];
+          if (info && typeof info === 'object') {
+            if(info.version) items.push(`<li><strong>バージョン:</strong> ${info.version}</li>`);
+            if(info.branch) items.push(`<li><strong>ブランチ:</strong> ${info.branch}</li>`);
+            if(info.date) items.push(`<li><strong>ビルド日:</strong> ${toJpDate(info.date)}</li>`);
+          }
+          return `
+            <div class="card">
+              <span class="platform-badge">${plat.label}</span><br>
+              ${error ? `<div class="error">${error}</div>` : items.length > 0 ? `<ul class="info-list">${items.join('')}</ul>` : '<div>情報なし</div>'}
+            </div>
+          `;
+        }).join('')}
       </div>`;
     }
     fetchAllBuilds();
 
-    // ==== ユーザー検索 ====
+    /** ユーザー検索：「取得できた項目だけ」表示 */
     document.getElementById('user-form').addEventListener('submit', async e => {
       e.preventDefault();
       const resultDom = document.getElementById('user-result');
       const name = document.getElementById('epic-name').value.trim();
       if (!name) {
-        resultDom.innerHTML = '<div class="error">ユーザー名を入力してください。</div>';
+        resultDom.innerHTML = '<div class="error">ユーザー名またはアカウントIDを入力してください。</div>';
         return;
       }
       resultDom.innerHTML = '<div class="loader"></div>';
       try {
-        const res = await fetch(`${BASE_URL}/lookup?platform=epic&username=${encodeURIComponent(name)}`);
-        if (!res.ok) throw new Error('APIエラー: ' + res.status);
-        const data = await res.json();
-        if (!data || !data.result || !data.result.account_id) {
-          throw new Error('該当ユーザーが見つかりませんでした');
+        // まずアカウントIDで検索。400エラーならユーザー名で検索
+        let url = `${BASE_URL}/lookup?accountid=${encodeURIComponent(name)}`;
+        let res = await fetch(url);
+        let data;
+        if (res.ok) {
+          data = await res.json();
+        } else {
+          // Epicユーザー名での検索
+          url = `${BASE_URL}/lookup?platform=epic&username=${encodeURIComponent(name)}`;
+          res = await fetch(url);
+          if (!res.ok) throw new Error('APIエラー: ' + res.status);
+          data = await res.json();
         }
+        if (!data || !data.result) throw new Error('該当ユーザーが見つかりませんでした');
+        const r = data.result;
+        let items = [];
+        if (r.username) items.push(`<li><strong>Epicユーザー名:</strong> ${r.username}</li>`);
+        if (r.account_id) items.push(`<li><strong>アカウントID:</strong> ${r.account_id}</li>`);
+        if (r.platform) items.push(`<li><strong>プラットフォーム:</strong> ${r.platform}</li>`);
+        if (r.avatar) items.push(`<li><img src="${r.avatar}" alt="アイコン" style="margin:0.5em 0; max-width:80px; border-radius:50%;"></li>`);
         resultDom.innerHTML = `
           <div class="card">
-            <strong>Epicユーザー名:</strong> ${data.result.username}<br>
-            <strong>アカウントID:</strong> ${data.result.account_id}<br>
-            ${data.result.platform ? `<strong>プラットフォーム:</strong> ${data.result.platform}<br>` : ''}
-            ${data.result.avatar ? `<img src="${data.result.avatar}" alt="アイコン" style="margin:0.5em 0; max-width:80px; border-radius:50%;">` : ''}
+            <ul class="info-list">${items.join('')}</ul>
           </div>
-          <div class="success">ユーザー情報を取得しました。</div>
         `;
       } catch (err) {
         resultDom.innerHTML = `<div class="error">ユーザー情報取得失敗: ${err.message}</div>`;
