@@ -19,7 +19,7 @@
       text-align: center;
       font-size: 2rem;
       font-weight: bold;
-      letter-spacing: 0.1em;
+      letter-spacing: 0.08em;
       box-shadow: 0 2px 8px rgba(0,0,0,0.25);
     }
     main {
@@ -149,9 +149,10 @@
   </header>
   <main>
     <section>
-      <h2>Webサイトステータス</h2>
+      <h2>API障害情報</h2>
       <div style="font-size:1em;color:#ffb3b3;">
-        <strong>現在:</strong> 正常に動作中です。
+        <strong>2025-07-27</strong> 一時的に全エンドポイントで障害（500エラー）が発生しましたが、4:19に復旧しています。<br>
+        エラーが続く場合は時間をおいて再試行してください。
       </div>
     </section>
 
@@ -169,16 +170,16 @@
 
     <section>
       <h2>ビルド情報（全プラットフォーム）</h2>
-      <div class="caption">PC, Switch, PS4, PS5, Xbox, Android, iOSの最新公式ビルド</div>
+      <div class="caption">APIで対応しているプラットフォーム全ての最新ビルド</div>
       <div id="build"><div class="loader"></div></div>
     </section>
 
     <section>
-      <h2>ユーザー検索（Epicアカウント）</h2>
-      <div class="caption">Epicのユーザー名からアカウントIDなどを調べられます</div>
+      <h2>ユーザー検索（EpicアカウントID）</h2>
+      <div class="caption">EpicアカウントIDからユーザー名等を調べられます</div>
       <form id="user-form" autocomplete="off">
         <div class="input-group">
-          <input type="text" id="epic-name" placeholder="Epicユーザー名またはアカウントIDを入力" required>
+          <input type="text" id="epic-name" placeholder="EpicアカウントIDを入力（ユーザー名不可）" required>
           <button type="submit">検索</button>
         </div>
       </form>
@@ -187,6 +188,7 @@
   </main>
   <script>
     const BASE_URL = 'https://fljpapi.com/api/v2';
+
     function toJpDate(str) {
       if (!str) return '不明';
       try {
@@ -207,7 +209,7 @@
       return s;
     }
 
-    /** ニュース：「取得できた項目だけ」表示 */
+    // ニュース
     async function fetchNews() {
       const dom = document.getElementById('news');
       dom.innerHTML = '<div class="loader"></div>';
@@ -239,7 +241,7 @@
     }
     fetchNews();
 
-    /** イベント：「取得できた項目だけ」表示 */
+    // イベント
     async function fetchTimeline() {
       const dom = document.getElementById('timeline');
       dom.innerHTML = '<div class="loader"></div>';
@@ -287,29 +289,38 @@
     }
     fetchTimeline();
 
-    /** ビルド情報：「取得できた項目だけ」表示 */
-    const platforms = [
-      {key: 'Windows', label: 'PC'},
-      {key: 'Switch', label: 'Switch'},
-      {key: 'PS4', label: 'PS4'},
-      {key: 'PS5', label: 'PS5'},
-      {key: 'XboxOne', label: 'Xbox One'},
-      {key: 'XboxSeries', label: 'Xbox Series'},
-      {key: 'Android', label: 'Android'},
-      {key: 'iOS', label: 'iOS'}
-    ];
+    // ビルド情報
     async function fetchAllBuilds() {
       const target = document.getElementById('build');
       target.innerHTML = '<div class="loader"></div>';
+
+      // 利用可能なプラットフォーム一覧を先に取得
+      let platforms = [];
+      try {
+        const lookup = await fetch(`${BASE_URL}/build/platforms`);
+        if (lookup.ok) {
+          const platData = await lookup.json();
+          platforms = platData.available_platforms || [];
+        }
+      } catch {}
+      // フォールバック
+      if (platforms.length === 0) {
+        platforms = [
+          "Windows","iOS","Android","PS4","PS5","Xbox One","Xbox Series X|S","Switch","Switch2"
+        ];
+      }
       let results = [];
       for (const plat of platforms) {
         try {
-          const res = await fetch(`${BASE_URL}/build/${plat.key}`);
-          if (!res.ok) throw new Error(`${plat.label}：取得エラー (${res.status})`);
+          const res = await fetch(`${BASE_URL}/build/${encodeURIComponent(plat)}`);
           const data = await res.json();
-          results.push({plat, info: data});
+          if (data.status === "error") {
+            results.push({plat, error: data.message || "取得エラー"});
+          } else {
+            results.push({plat, info: data});
+          }
         } catch (err) {
-          results.push({plat, error: err.message});
+          results.push({plat, error: "取得エラー"});
         }
       }
       target.innerHTML = `<div class="card-list">
@@ -322,7 +333,7 @@
           }
           return `
             <div class="card">
-              <span class="platform-badge">${plat.label}</span><br>
+              <span class="platform-badge">${plat}</span><br>
               ${error ? `<div class="error">${error}</div>` : items.length > 0 ? `<ul class="info-list">${items.join('')}</ul>` : '<div>情報なし</div>'}
             </div>
           `;
@@ -331,42 +342,36 @@
     }
     fetchAllBuilds();
 
-    /** ユーザー検索：「取得できた項目だけ」表示 */
+    // ユーザー検索（アカウントIDのみ対応）
     document.getElementById('user-form').addEventListener('submit', async e => {
       e.preventDefault();
       const resultDom = document.getElementById('user-result');
-      const name = document.getElementById('epic-name').value.trim();
-      if (!name) {
-        resultDom.innerHTML = '<div class="error">ユーザー名またはアカウントIDを入力してください。</div>';
+      const id = document.getElementById('epic-name').value.trim();
+      if (!id) {
+        resultDom.innerHTML = '<div class="error">EpicアカウントIDを入力してください。</div>';
         return;
       }
       resultDom.innerHTML = '<div class="loader"></div>';
       try {
-        // まずアカウントIDで検索。400エラーならユーザー名で検索
-        let url = `${BASE_URL}/lookup?accountid=${encodeURIComponent(name)}`;
-        let res = await fetch(url);
-        let data;
-        if (res.ok) {
-          data = await res.json();
-        } else {
-          // Epicユーザー名での検索
-          url = `${BASE_URL}/lookup?platform=epic&username=${encodeURIComponent(name)}`;
-          res = await fetch(url);
-          if (!res.ok) throw new Error('APIエラー: ' + res.status);
-          data = await res.json();
+        const url = `${BASE_URL}/lookup?accountid=${encodeURIComponent(id)}`;
+        const res = await fetch(url);
+        const data = await res.json();
+        if (!res.ok || !data || Object.keys(data).length === 0) {
+          throw new Error('該当ユーザーが見つかりませんでした');
         }
-        if (!data || !data.result) throw new Error('該当ユーザーが見つかりませんでした');
-        const r = data.result;
-        let items = [];
-        if (r.username) items.push(`<li><strong>Epicユーザー名:</strong> ${r.username}</li>`);
-        if (r.account_id) items.push(`<li><strong>アカウントID:</strong> ${r.account_id}</li>`);
-        if (r.platform) items.push(`<li><strong>プラットフォーム:</strong> ${r.platform}</li>`);
-        if (r.avatar) items.push(`<li><img src="${r.avatar}" alt="アイコン" style="margin:0.5em 0; max-width:80px; border-radius:50%;"></li>`);
-        resultDom.innerHTML = `
-          <div class="card">
-            <ul class="info-list">${items.join('')}</ul>
-          </div>
-        `;
+        let html = "";
+        for (const key in data) {
+          const user = data[key];
+          html += `
+            <div class="card">
+              <ul class="info-list">
+                ${user.displayName ? `<li><strong>Epicユーザー名:</strong> ${user.displayName}</li>` : ""}
+                ${user.id ? `<li><strong>アカウントID:</strong> ${user.id}</li>` : ""}
+              </ul>
+            </div>
+          `;
+        }
+        resultDom.innerHTML = html;
       } catch (err) {
         resultDom.innerHTML = `<div class="error">ユーザー情報取得失敗: ${err.message}</div>`;
       }
