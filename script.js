@@ -17,7 +17,7 @@ function formatEventTypeJa(type) {
   return s;
 }
 
-// 全モードのニュースを取得
+// ニュース取得（全モード）
 async function fetchNews() {
   const dom = document.getElementById('news');
   dom.innerHTML = '<div class="loader"></div>';
@@ -111,4 +111,157 @@ async function fetchBuilds() {
   }
 }
 
-// 他の関数（ユーザー検索、ステータス、トーナメント等）も次で送ります！
+async function fetchStatus() {
+  const dom = document.getElementById('status');
+  dom.innerHTML = '<div class="loader"></div>';
+  try {
+    const res = await fetch(`${BASE_URL}/fortnitestatus`);
+    const data = await res.json();
+    if (!data || !data.data) throw new Error('データが不正です');
+    const d = data.data;
+    let html = `<ul class="info-list">`;
+    html += `<li><strong>状態:</strong> ${d.status || '不明'}</li>`;
+    if (d.maintenanceMessage) html += `<li><strong>メンテナンス:</strong> ${d.maintenanceMessage}</li>`;
+    if (d.queues && d.queues.length) {
+      html += `<li><strong>待機列:</strong><ul>`;
+      d.queues.forEach(q => {
+        html += `<li>${q.name || '不明'} - ${q.status || '不明'}</li>`;
+      });
+      html += `</ul></li>`;
+    }
+    html += `</ul>`;
+    dom.innerHTML = `<div class="card">${html}</div>`;
+  } catch (err) {
+    dom.innerHTML = `<div class="error">ステータス情報取得失敗: ${err.message}</div>`;
+  }
+}
+
+async function fetchHotfix() {
+  const dom = document.getElementById('hotfix');
+  dom.innerHTML = '<div class="loader"></div>';
+  try {
+    const res = await fetch(`${BASE_URL}/cloudstorage`);
+    const data = await res.json();
+    if (!data || !data.data) throw new Error('データが不正です');
+    const files = data.data;
+    if (!files.length) return dom.innerHTML = '<div class="error">ホットフィックスはありません。</div>';
+    const html = files.map(f => {
+      return `<div class="card"><ul class="info-list"><li><strong>ファイル名:</strong> ${f.uniqueFilename}</li></ul></div>`;
+    }).join('');
+    dom.innerHTML = `<div class="card-list">${html}</div>`;
+  } catch (err) {
+    dom.innerHTML = `<div class="error">ホットフィックス情報取得失敗: ${err.message}</div>`;
+  }
+}
+
+async function fetchTournaments() {
+  const dom = document.getElementById('tournaments');
+  dom.innerHTML = '<div class="loader"></div>';
+  try {
+    // region と platformは固定例。必要に応じて動的化してください。
+    const region = 'JP';
+    const platform = 'pc';
+    const res = await fetch(`${BASE_URL}/tournamentlist?region=${region}&platform=${platform}&cosmeticsinfo=true`);
+    const data = await res.json();
+    if (!data || !data.data) throw new Error('データが不正です');
+    const tournaments = data.data;
+    if (!tournaments.length) return dom.innerHTML = '<div class="error">トーナメント情報はありません。</div>';
+    const html = tournaments.map(t => {
+      let rewards = '';
+      if (t.rewardDescription) rewards = `<li><strong>報酬:</strong> ${t.rewardDescription}</li>`;
+      else if (t.cosmetics) {
+        rewards = '<li><strong>報酬アイテム:</strong><ul>';
+        t.cosmetics.forEach(c => {
+          rewards += `<li>${c.name} - ${c.description}<br><img src="${c.images.icon}" alt="${c.name}" style="max-width:48px;vertical-align:middle;border-radius:0.3em;"></li>`;
+        });
+        rewards += '</ul></li>';
+      }
+      return `<div class="card">
+        <ul class="info-list">
+          <li><strong>イベント名:</strong> ${t.eventName || '不明'}</li>
+          <li><strong>開始日時:</strong> ${toJpDate(t.eventStart)}</li>
+          <li><strong>終了日時:</strong> ${toJpDate(t.eventEnd)}</li>
+          ${rewards}
+        </ul>
+      </div>`;
+    }).join('');
+    dom.innerHTML = `<div class="card-list">${html}</div>`;
+  } catch (err) {
+    dom.innerHTML = `<div class="error">トーナメント情報取得失敗: ${err.message}</div>`;
+  }
+}
+
+async function fetchPlaylists() {
+  const dom = document.getElementById('playlists');
+  dom.innerHTML = '<div class="loader"></div>';
+  try {
+    const res = await fetch(`${BASE_URL}/links/fn/set_br_playlists`);
+    const data = await res.json();
+    if (!data || !data.data) throw new Error('データが不正です');
+    const playlists = data.data?.playlists || [];
+    if (!playlists.length) return dom.innerHTML = '<div class="error">プレイリスト情報はありません。</div>';
+    const html = playlists.map(pl => {
+      return `<div class="card">
+        <ul class="info-list">
+          <li><strong>名前:</strong> ${pl.name || '不明'}</li>
+          <li><strong>説明:</strong> ${pl.description || 'なし'}</li>
+          <li><strong>プレイリストID:</strong> ${pl.playlistId || '不明'}</li>
+        </ul>
+      </div>`;
+    }).join('');
+    dom.innerHTML = `<div class="card-list">${html}</div>`;
+  } catch (err) {
+    dom.innerHTML = `<div class="error">プレイリスト情報取得失敗: ${err.message}</div>`;
+  }
+}
+
+// ユーザー検索
+async function fetchUserInfo(accountId) {
+  const dom = document.getElementById('user-result');
+  dom.innerHTML = '<div class="loader"></div>';
+  try {
+    // まとめて名前取得 (単一ユーザーも配列で)
+    const lookupRes = await fetch(`${BASE_URL}/lookup?accountid=${accountId}`);
+    const lookupData = await lookupRes.json();
+    if (!lookupData || !lookupData.data || !lookupData.data.length) throw new Error('アカウントが見つかりません');
+    const userName = lookupData.data[0].displayName || '不明';
+
+    // ランク取得
+    const rankRes = await fetch(`${BASE_URL}/rank/${accountId}`);
+    const rankData = await rankRes.json();
+
+    let rankHtml = '';
+    if (rankData && rankData.data) {
+      const rd = rankData.data;
+      rankHtml = `<ul class="info-list">`;
+      rankHtml += `<li><strong>ユーザー名:</strong> ${userName}</li>`;
+      rankHtml += `<li><strong>ランクポイント:</strong> ${rd.rankPoints ?? '不明'}</li>`;
+      rankHtml += `<li><strong>ランク:</strong> ${rd.rank ?? '不明'}</li>`;
+      rankHtml += `<li><strong>最高ランク:</strong> ${rd.topRank ?? '不明'}</li>`;
+      rankHtml += `</ul>`;
+    } else {
+      rankHtml = `<div class="error">ランク情報が見つかりません。</div>`;
+    }
+    dom.innerHTML = `<div class="card">${rankHtml}</div>`;
+  } catch (err) {
+    dom.innerHTML = `<div class="error">ユーザー情報取得失敗: ${err.message}</div>`;
+  }
+}
+
+document.getElementById('user-form').addEventListener('submit', e => {
+  e.preventDefault();
+  const input = document.getElementById('epic-name').value.trim();
+  if (input) {
+    fetchUserInfo(input);
+  }
+});
+
+window.addEventListener('load', () => {
+  fetchNews();
+  fetchTimeline();
+  fetchBuilds();
+  fetchStatus();
+  fetchHotfix();
+  fetchTournaments();
+  fetchPlaylists();
+});
