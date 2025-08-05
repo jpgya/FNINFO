@@ -28,7 +28,7 @@ async function fetchNews() {
       "Product.Sparks", "Product.STW"
     ];
     const all = await Promise.all(tags.map(tag =>
-      fetch(`${BASE_URL}/news?platform=pc&language=ja&tags=${tag}`)
+      fetch(`${BASE_URL}/news?platform=Windows&language=ja&serverRegion=ASIA&country=JP&tags=${tag}`)
         .then(r => r.ok ? r.json() : null)
     ));
     const items = all.flatMap(res => (res?.data?.contentItems || []));
