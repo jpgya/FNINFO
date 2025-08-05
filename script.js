@@ -144,19 +144,34 @@ async function fetchHotfix() {
   const dom = document.getElementById('hotfix');
   dom.innerHTML = '<div class="loader"></div>';
   try {
-    const res = await fetch(`${BASE_URL}/cloudstorage`);
+    const res = await fetch('https://fljpapi.jp/api/v2/cloudstorage');
     const data = await res.json();
-    if (!data || !data.data) throw new Error('データが不正です');
-    const files = data.data;
-    if (!files.length) return dom.innerHTML = '<div class="error">ホットフィックスはありません。</div>';
-    const html = files.map(f => {
-      return `<div class="card"><ul class="info-list"><li><strong>ファイル名:</strong> ${f.uniqueFilename}</li></ul></div>`;
+
+    if (!data?.data?.length) {
+      dom.innerHTML = '<div class="error">ホットフィックスファイルが見つかりません。</div>';
+      return;
+    }
+
+    const html = data.data.map(file => {
+      const li = [
+        `<ul class="info-list">`,
+        `<li><strong>ファイル名:</strong> ${file.filename}</li>`,
+        `<li><strong>サイズ:</strong> ${file.length} バイト</li>`,
+        `<li><strong>アップロード日:</strong> ${toJpDate(file.uploaded)}</li>`,
+        `<li><strong>ハッシュ:</strong> ${file.hash}</li>`,
+        `<li><strong>SHA256:</strong> ${file.hash256}</li>`,
+        `<li><strong>ユニーク名:</strong> ${file.uniqueFilename}</li>`,
+        `</ul>`
+      ];
+      return `<div class="card">${li.join('')}</div>`;
     }).join('');
+
     dom.innerHTML = `<div class="card-list">${html}</div>`;
   } catch (err) {
-    dom.innerHTML = `<div class="error">ホットフィックス情報取得失敗: ${err.message}</div>`;
+    dom.innerHTML = `<div class="error">取得失敗: ${err.message}</div>`;
   }
 }
+
 
 async function fetchTournaments() {
   const dom = document.getElementById('tournaments');
