@@ -117,24 +117,28 @@ async function fetchStatus() {
   try {
     const res = await fetch(`${BASE_URL}/fortnitestatus`);
     const data = await res.json();
-    if (!data || !data.data) throw new Error('データが不正です');
-    const d = data.data;
-    let html = `<ul class="info-list">`;
-    html += `<li><strong>状態:</strong> ${d.status || '不明'}</li>`;
-    if (d.maintenanceMessage) html += `<li><strong>メンテナンス:</strong> ${d.maintenanceMessage}</li>`;
-    if (d.queues && d.queues.length) {
-      html += `<li><strong>待機列:</strong><ul>`;
-      d.queues.forEach(q => {
-        html += `<li>${q.name || '不明'} - ${q.status || '不明'}</li>`;
-      });
-      html += `</ul></li>`;
+
+    const fn = data.fnstatus;
+    const queue = data.queue;
+    const maintenance = data.maintenance;
+
+    let html = '<ul class="info-list">';
+    html += `<li><strong>サーバー状態:</strong> ${fn.status === 'UP' ? 'オンライン' : 'オフライン'}</li>`;
+    html += `<li><strong>メッセージ:</strong> ${fn.message}</li>`;
+    html += `<li><strong>キュー:</strong> ${queue.active ? '有効' : 'なし'}</li>`;
+    if (queue.expectedWait)
+      html += `<li><strong>待ち時間:</strong> ${queue.expectedWait} 秒</li>`;
+    if (Array.isArray(maintenance) && maintenance.length > 0) {
+      html += `<li><strong>メンテナンス中:</strong> ${maintenance.length} 件</li>`;
     }
-    html += `</ul>`;
+    html += '</ul>';
+
     dom.innerHTML = `<div class="card">${html}</div>`;
   } catch (err) {
-    dom.innerHTML = `<div class="error">ステータス情報取得失敗: ${err.message}</div>`;
+    dom.innerHTML = `<div class="error">ステータス取得失敗: ${err.message}</div>`;
   }
 }
+
 
 async function fetchHotfix() {
   const dom = document.getElementById('hotfix');
