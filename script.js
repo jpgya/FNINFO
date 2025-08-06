@@ -214,23 +214,39 @@ async function fetchPlaylists() {
   const dom = document.getElementById('playlists');
   dom.innerHTML = '<div class="loader"></div>';
   try {
-    const res = await fetch(`${BASE_URL}/links/fn/set_br_playlists`);
+    const res = await fetch('https://fljpapi.jp/api/v2/playlists');
     const data = await res.json();
-    if (!data || !data.data) throw new Error('データが不正です');
-    const playlists = data.data?.playlists || [];
-    if (!playlists.length) return dom.innerHTML = '<div class="error">プレイリスト情報はありません。</div>';
-    const html = playlists.map(pl => {
-      return `<div class="card">
-        <ul class="info-list">
-          <li><strong>名前:</strong> ${pl.name || '不明'}</li>
-          <li><strong>説明:</strong> ${pl.description || 'なし'}</li>
-          <li><strong>プレイリストID:</strong> ${pl.playlistId || '不明'}</li>
-        </ul>
-      </div>`;
+
+    if (!data?.data?.links) {
+      dom.innerHTML = '<div class="error">プレイリストが見つかりません。</div>';
+      return;
+    }
+
+    const playlists = Object.values(data.data.links);
+
+    const html = playlists.map(p => {
+      const meta = p.metadata || {};
+      const jaTitle = meta.alt_title?.ja || meta.title || p.mnemonic;
+      const image = meta.image_urls?.url_m || meta.image_url || '';
+      const published = toJpDate(p.published);
+      const active = p.active ? '✅アクティブ' : '❌非アクティブ';
+
+      return `
+        <div class="card">
+          <img src="${image}" alt="${jaTitle}" class="card-image">
+          <ul class="info-list">
+            <li><strong>日本語名:</strong> ${jaTitle}</li>
+            <li><strong>英語名:</strong> ${meta.title || p.mnemonic}</li>
+            <li><strong>状態:</strong> ${active}</li>
+            <li><strong>公開日:</strong> ${published}</li>
+            <li><strong>作成者:</strong> ${p.creatorName}</li>
+          </ul>
+        </div>`;
     }).join('');
+
     dom.innerHTML = `<div class="card-list">${html}</div>`;
   } catch (err) {
-    dom.innerHTML = `<div class="error">プレイリスト情報取得失敗: ${err.message}</div>`;
+    dom.innerHTML = `<div class="error">取得失敗: ${err.message}</div>`;
   }
 }
 
