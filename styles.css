@@ -10,12 +10,12 @@ body {
 
 header {
   background: #141e30;
-  padding: 1.2rem 0 1rem 0;
+  padding: 1.5rem 1rem;
   text-align: center;
   font-size: 2rem;
   font-weight: bold;
   letter-spacing: 0.08em;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
   user-select: none;
 }
 
@@ -27,15 +27,15 @@ main {
 
 section {
   margin-bottom: 2.5rem;
-  background: rgba(255,255,255,0.08);
+  background: rgba(255, 255, 255, 0.07);
   border-radius: 1rem;
   padding: 1.5rem 1.2rem;
-  box-shadow: 0 4px 18px 0 rgba(0,0,0,0.14);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.15);
   transition: background-color 0.3s ease;
 }
 
 section:hover {
-  background: rgba(255,255,255,0.12);
+  background: rgba(255, 255, 255, 0.12);
 }
 
 h2 {
@@ -56,25 +56,25 @@ h2 {
 .card-list {
   display: flex;
   flex-wrap: wrap;
-  gap: 1rem;
+  gap: 1.2rem;
 }
 
 .card {
-  background: rgba(0,0,0,0.13);
-  box-shadow: 0 2px 8px rgba(0,0,0,0.13);
+  background: rgba(255, 255, 255, 0.06);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   border-radius: 0.7rem;
   padding: 1.2rem;
   min-width: 250px;
   flex: 1 1 280px;
   margin-bottom: 0.8rem;
   color: #fff;
-  transition: box-shadow 0.2s, background-color 0.3s;
+  transition: box-shadow 0.3s, background-color 0.3s;
   word-break: break-word;
 }
 
 .card:hover {
-  box-shadow: 0 4px 20px rgba(0,255,255,0.18);
-  background-color: rgba(0,255,255,0.05);
+  box-shadow: 0 6px 22px rgba(0, 255, 255, 0.22);
+  background-color: rgba(0, 255, 255, 0.06);
 }
 
 .loader {
@@ -105,6 +105,7 @@ h2 {
   gap: 0.7rem;
   margin-top: 0.7rem;
   margin-bottom: 1.2rem;
+  flex-wrap: wrap;
 }
 
 input[type="text"] {
@@ -125,7 +126,7 @@ input[type="text"]:focus {
 }
 
 button {
-  background: linear-gradient(90deg,#00ffd0,#3586ff);
+  background: linear-gradient(90deg, #00ffd0, #3586ff);
   border: none;
   border-radius: 0.4em;
   padding: 0.6em 1.3em;
@@ -133,13 +134,13 @@ button {
   font-weight: bold;
   font-size: 1em;
   cursor: pointer;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
   transition: background 0.2s, color 0.2s;
   user-select: none;
 }
 
 button:hover {
-  background: linear-gradient(90deg,#00c0a8,#276bd6);
+  background: linear-gradient(90deg, #00c0a8, #276bd6);
   color: #fff;
 }
 
@@ -168,7 +169,25 @@ ul.info-list li {
 }
 
 @media (max-width: 600px) {
-  .card-list { flex-direction: column; }
-  main { padding: 1rem 2vw;}
-  section { padding: 1.2rem 2vw;}
+  .card-list {
+    flex-direction: column;
+  }
+
+  main {
+    padding: 1rem 4vw;
+  }
+
+  section {
+    padding: 1.2rem 4vw;
+  }
+
+  .input-group {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  button {
+    width: 100%;
+  }
 }
+
