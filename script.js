@@ -214,7 +214,7 @@ async function fetchPlaylists() {
   const dom = document.getElementById('playlists');
   dom.innerHTML = '<div class="loader"></div>';
   try {
-    const res = await fetch('https://fljpapi.jp/api/v2/playlists');
+    const res = await fetch('https://fljpapi.jp/api/v2/links/fn/set_br_playlists');
     const data = await res.json();
 
     if (!data?.data?.links) {
