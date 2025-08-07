@@ -45,6 +45,18 @@
     </section>
 
     <section>
+      <h2>ユーザー検索（EpicアカウントID）</h2>
+      <div class="caption">EpicアカウントIDからユーザー名・ランク等を調べられます</div>
+      <form id="user-form" autocomplete="off">
+        <div class="input-group">
+          <input type="text" id="epic-name" placeholder="EpicアカウントIDを入力（ユーザー名不可）" required>
+          <button type="submit">検索</button>
+        </div>
+      </form>
+      <div id="user-result"></div>
+    </section>
+
+    <section>
       <h2>イベントスケジュール</h2>
       <div class="caption">現在・今後のゲーム内イベント一覧</div>
       <div id="timeline"><div class="loader"></div></div>
@@ -56,17 +68,7 @@
       <div id="build"><div class="loader"></div></div>
     </section>
 
-    <section>
-      <h2>ユーザー検索（EpicアカウントID）</h2>
-      <div class="caption">EpicアカウントIDからユーザー名・ランク等を調べられます</div>
-      <form id="user-form" autocomplete="off">
-        <div class="input-group">
-          <input type="text" id="epic-name" placeholder="EpicアカウントIDを入力（ユーザー名不可）" required>
-          <button type="submit">検索</button>
-        </div>
-      </form>
-      <div id="user-result"></div>
-    </section>
+    
 
     
 
