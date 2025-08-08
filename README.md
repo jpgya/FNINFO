@@ -27,3 +27,9 @@ GitHub Pages 上でホストされ、インストール不要で利用可能で�
 - GitHub Pages（ホスティング）
 - GitHub Actions（自動デプロイ）
 
+## 利用規約
+- 本サイトは Epic Games, Inc. とは一切関係ありません。
+- API 利用規約に従って使用してください。
+- 商用利用は禁止です。
+
+
