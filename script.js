@@ -179,9 +179,9 @@ async function fetchTournaments() {
   dom.innerHTML = '<div class="loader"></div>';
 
   try {
-    // region と platformは固定例。必要に応じて動的化してください。
-    const region = 'JP';
-    const platform = 'pc';
+    // region と platforは固定例。必要に応じて動的化してください。
+    const region = 'Asia';
+    const platform = 'Windows';
     const res = await fetch(`${BASE_URL_NOT_V2}/tournamentlist?region=${region}&platform=${platform}&cosmeticsinfo=true`);
     const data = await res.json();
 
