@@ -177,19 +177,28 @@ async function fetchHotfix() {
 async function fetchTournaments() {
   const dom = document.getElementById('tournaments');
   dom.innerHTML = '<div class="loader"></div>';
+
   try {
     // region と platformは固定例。必要に応じて動的化してください。
     const region = 'JP';
     const platform = 'pc';
     const res = await fetch(`${BASE_URL_NOT_V2}/tournamentlist?region=${region}&platform=${platform}&cosmeticsinfo=true`);
     const data = await res.json();
+
     if (!data || !data.data) throw new Error('データが不正です');
+
     const tournaments = data.data;
-    if (!tournaments.length) return dom.innerHTML = '<div class="error">トーナメント情報はありません。</div>';
+
+    if (!tournaments.length) {
+      dom.innerHTML = '<div class="error">トーナメント情報はありません。</div>';
+      return;
+    }
+
     const html = tournaments.map(t => {
       let rewards = '';
-      if (t.rewardDescription) rewards = `<li><strong>報酬:</strong> ${t.rewardDescription}</li>`;
-      else if (t.cosmetics) {
+      if (t.rewardDescription) {
+        rewards = `<li><strong>報酬:</strong> ${t.rewardDescription}</li>`;
+      } else if (t.cosmetics) {
         rewards = '<li><strong>報酬アイテム:</strong><ul>';
         t.cosmetics.forEach(c => {
           rewards += `<li>${c.name} - ${c.description}<br><img src="${c.images.icon}" alt="${c.name}" style="max-width:48px;vertical-align:middle;border-radius:0.3em;"></li>`;
@@ -205,7 +214,9 @@ async function fetchTournaments() {
         </ul>
       </div>`;
     }).join('');
+
     dom.innerHTML = `<div class="card-list">${html}</div>`;
+
   } catch (err) {
     dom.innerHTML = `<div class="error">トーナメント情報取得失敗: ${err.message}</div>`;
   }
