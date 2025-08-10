@@ -183,6 +183,34 @@ function toJpDate(isoStr) {
   return `${d.getFullYear()}年${(d.getMonth()+1).toString().padStart(2,'0')}月${d.getDate().toString().padStart(2,'0')}日 ${d.getHours().toString().padStart(2,'0')}時${d.getMinutes().toString().padStart(2,'0')}分`;
 }
 
+// HTMLエスケープ（nullや数値でも安全）
+function escapeHtml(input) {
+  if (input === null || input === undefined) return '';
+  const str = String(input);
+  return str.replace(/[&<>"']/g, m => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;'
+  })[m]);
+}
+
+// JST変換（必要に応じて修正）
+function toJpDate(isoString) {
+  if (!isoString) return '不明';
+  try {
+    const date = new Date(isoString);
+    if (isNaN(date)) return '不明';
+    return date.toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo' });
+  } catch {
+    return '不明';
+  }
+}
+
+
+
+// トーナメント情報取得
 async function fetchTournaments() {
   const dom = document.getElementById('tournaments');
   if (!dom) {
@@ -200,13 +228,12 @@ async function fetchTournaments() {
 
     const data = await res.json();
 
-    // events 配列の検出（互換性を持たせる）
+    // events 配列の検出
     let events = [];
     if (Array.isArray(data.events)) events = data.events;
     else if (Array.isArray(data.data?.events)) events = data.data.events;
     else if (Array.isArray(data.data)) events = data.data;
     else {
-      // API の返りが想定外なら空にしてエラー表示
       dom.innerHTML = '<div class="error">トーナメント情報が見つかりません（レスポンス形式が想定と異なります）。</div>';
       return;
     }
@@ -216,59 +243,60 @@ async function fetchTournaments() {
       return;
     }
 
-    // HTML 生成
+    // HTML生成
     const html = events.map((e, idx) => {
       const title = escapeHtml(e.eventGroup || e.displayDataId || e.eventId || 'イベント名不明');
       const begin = e.beginTime_jst || toJpDate(e.beginTime);
       const end = e.endTime_jst || toJpDate(e.endTime);
       const announce = e.announcementTime_jst || toJpDate(e.announcementTime);
-      const minLevel = e.metadata?.minimumAccountLevel ?? '不明';
-      const type = e.metadata?.tournamentType ?? '不明';
+      const minLevel = escapeHtml(e.metadata?.minimumAccountLevel ?? '不明');
+      const type = escapeHtml(e.metadata?.tournamentType ?? '不明');
       const regions = Array.isArray(e.regions) ? escapeHtml(e.regions.join(', ')) : '不明';
       const platforms = Array.isArray(e.platforms) ? escapeHtml(e.platforms.join(', ')) : '不明';
       const linkInfo = e.link ? `${escapeHtml(e.link.code || '')}${e.link.type ? ` (${escapeHtml(e.link.type)})` : ''}` : 'なし';
 
-      // eventWindows を整形
       const windows = Array.isArray(e.eventWindows) ? e.eventWindows : [];
-      const windowsHtml = windows.length ? windows.map((w, wi) => {
-        const wId = escapeHtml(w.eventWindowId || `window_${wi+1}`);
-        const wBegin = w.beginTime_jst || toJpDate(w.beginTime);
-        const wEnd = w.endTime_jst || toJpDate(w.endTime);
-        const wCountdown = w.countdownBeginTime_jst || toJpDate(w.countdownBeginTime);
-        const roundType = w.metadata?.RoundType || '不明';
-        const canSpectate = (typeof w.canLiveSpectate === 'boolean') ? (w.canLiveSpectate ? '可' : '不可') : '不明';
-        const visibility = w.visibility || '不明';
-        const requireAll = Array.isArray(w.requireAllTokens) && w.requireAllTokens.length ? escapeHtml(w.requireAllTokens.join(', ')) : 'なし';
-        const requireNone = Array.isArray(w.requireNoneTokensCaller) && w.requireNoneTokensCaller.length ? escapeHtml(w.requireNoneTokensCaller.join(', ')) : 'なし';
-        const scoreLoc = Array.isArray(w.scoreLocations) && w.scoreLocations.length
-          ? w.scoreLocations.map(sl => `${escapeHtml(sl.leaderboardDefId || '')}${sl.isMainWindowLeaderboard ? ' (Main)' : ''}`).join(', ')
-          : 'なし';
+      const windowsHtml = windows.length
+        ? windows.map((w, wi) => {
+          const wId = escapeHtml(w.eventWindowId || `window_${wi+1}`);
+          const wBegin = w.beginTime_jst || toJpDate(w.beginTime);
+          const wEnd = w.endTime_jst || toJpDate(w.endTime);
+          const wCountdown = w.countdownBeginTime_jst || toJpDate(w.countdownBeginTime);
+          const roundType = escapeHtml(w.metadata?.RoundType || '不明');
+          const canSpectate = (typeof w.canLiveSpectate === 'boolean') ? (w.canLiveSpectate ? '可' : '不可') : '不明';
+          const visibility = escapeHtml(w.visibility || '不明');
+          const requireAll = Array.isArray(w.requireAllTokens) && w.requireAllTokens.length ? escapeHtml(w.requireAllTokens.join(', ')) : 'なし';
+          const requireNone = Array.isArray(w.requireNoneTokensCaller) && w.requireNoneTokensCaller.length ? escapeHtml(w.requireNoneTokensCaller.join(', ')) : 'なし';
+          const scoreLoc = Array.isArray(w.scoreLocations) && w.scoreLocations.length
+            ? w.scoreLocations.map(sl => `${escapeHtml(sl.leaderboardDefId || '')}${sl.isMainWindowLeaderboard ? ' (Main)' : ''}`).join(', ')
+            : 'なし';
 
-        return `
-          <div class="window">
-            <ul class="info-list">
-              <li><strong>#${wi+1}:</strong> ${wId}</li>
-              <li><strong>開始:</strong> ${wBegin}</li>
-              <li><strong>終了:</strong> ${wEnd}</li>
-              <li><strong>カウントダウン開始:</strong> ${wCountdown}</li>
-              <li><strong>ラウンドタイプ:</strong> ${escapeHtml(roundType)}</li>
-              <li><strong>観戦:</strong> ${escapeHtml(canSpectate)}</li>
-              <li><strong>visibility:</strong> ${escapeHtml(visibility)}</li>
-              <li><strong>必要トークン:</strong> ${requireAll}</li>
-              <li><strong>除外トークン:</strong> ${requireNone}</li>
-              <li><strong>スコア位置:</strong> ${scoreLoc}</li>
-            </ul>
-          </div>
-        `;
-      }).join('') : '<div class="info-list">ウィンドウ情報なし</div>';
+          return `
+            <div class="window">
+              <ul class="info-list">
+                <li><strong>#${wi+1}:</strong> ${wId}</li>
+                <li><strong>開始:</strong> ${escapeHtml(wBegin)}</li>
+                <li><strong>終了:</strong> ${escapeHtml(wEnd)}</li>
+                <li><strong>カウントダウン開始:</strong> ${escapeHtml(wCountdown)}</li>
+                <li><strong>ラウンドタイプ:</strong> ${roundType}</li>
+                <li><strong>観戦:</strong> ${escapeHtml(canSpectate)}</li>
+                <li><strong>visibility:</strong> ${visibility}</li>
+                <li><strong>必要トークン:</strong> ${requireAll}</li>
+                <li><strong>除外トークン:</strong> ${requireNone}</li>
+                <li><strong>スコア位置:</strong> ${scoreLoc}</li>
+              </ul>
+            </div>
+          `;
+        }).join('')
+        : '<div class="info-list">ウィンドウ情報なし</div>';
 
-      // 報酬表示（もしあれば）
-      // 新仕様のeventsには直接 cosmetics 配列がないかもしれないが、万一あれば表示する
       let rewardsHtml = '';
       if (e.rewardDescription) {
         rewardsHtml = `<li><strong>報酬:</strong> ${escapeHtml(e.rewardDescription)}</li>`;
       } else if (Array.isArray(e.cosmetics) && e.cosmetics.length) {
-        const list = e.cosmetics.map(c => `<li>${escapeHtml(c.name)} - ${escapeHtml(c.description || '')}${c.images?.icon ? `<br><img src="${escapeHtml(c.images.icon)}" alt="${escapeHtml(c.name)}" style="max-width:48px;vertical-align:middle;border-radius:0.3em;">` : ''}</li>`).join('');
+        const list = e.cosmetics.map(c =>
+          `<li>${escapeHtml(c.name)} - ${escapeHtml(c.description || '')}${c.images?.icon ? `<br><img src="${escapeHtml(c.images.icon)}" alt="${escapeHtml(c.name)}" style="max-width:48px;vertical-align:middle;border-radius:0.3em;">` : ''}</li>`
+        ).join('');
         rewardsHtml = `<li><strong>報酬アイテム:</strong><ul>${list}</ul></li>`;
       }
 
@@ -284,14 +312,13 @@ async function fetchTournaments() {
               <li><strong>発表日時:</strong> ${escapeHtml(announce)}</li>
               <li><strong>開始日時:</strong> ${escapeHtml(begin)}</li>
               <li><strong>終了日時:</strong> ${escapeHtml(end)}</li>
-              <li><strong>最小アカウントレベル:</strong> ${escapeHtml(minLevel)}</li>
-              <li><strong>大会タイプ:</strong> ${escapeHtml(type)}</li>
+              <li><strong>最小アカウントレベル:</strong> ${minLevel}</li>
+              <li><strong>大会タイプ:</strong> ${type}</li>
               <li><strong>リージョン:</strong> ${regions}</li>
               <li><strong>プラットフォーム:</strong> ${platforms}</li>
               <li><strong>リンク:</strong> ${linkInfo}</li>
               ${rewardsHtml}
             </ul>
-
             <h4>イベントウィンドウ</h4>
             ${windowsHtml}
           </div>
@@ -304,6 +331,10 @@ async function fetchTournaments() {
     dom.innerHTML = `<div class="error">トーナメント情報取得失敗: ${escapeHtml(err.message)}</div>`;
   }
 }
+
+// ページ読み込み後に自動実行
+document.addEventListener('DOMContentLoaded', fetchTournaments);
+
 
 
 async function fetchPlaylists() {
@@ -397,16 +428,5 @@ window.addEventListener('load', () => {
   fetchPlaylists();
 });
 
-function escapeHtml(str) {
-  if (!str) return '';
-  return str.replace(/[&<>"']/g, function(m) {
-    return ({
-      '&': '&amp;',
-      '<': '&lt;',
-      '>': '&gt;',
-      '"': '&quot;',
-      "'": '&#39;'
-    })[m];
-  });
-}
+
 
