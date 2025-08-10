@@ -1,5 +1,6 @@
 // FLJP API v2 対応版スクリプト
 const BASE_URL = 'https://fljpapi.jp/api/v2';
+const BASE_URL_NOT_V2 = 'https://fljpapi.jp/api';
 
 function toJpDate(str) {
   if (!str) return '不明';
@@ -180,7 +181,7 @@ async function fetchTournaments() {
     // region と platformは固定例。必要に応じて動的化してください。
     const region = 'JP';
     const platform = 'pc';
-    const res = await fetch(`${BASE_URL}/tournamentlist?region=${region}&platform=${platform}&cosmeticsinfo=true`);
+    const res = await fetch(`${BASE_URL_NOT_V2}/tournamentlist?region=${region}&platform=${platform}&cosmeticsinfo=true`);
     const data = await res.json();
     if (!data || !data.data) throw new Error('データが不正です');
     const tournaments = data.data;
