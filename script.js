@@ -185,6 +185,10 @@ function toJpDate(isoStr) {
 
 async function fetchTournaments() {
   const dom = document.getElementById('tournaments');
+  if (!dom) {
+    console.warn('DOM element #tournaments が見つかりません');
+    return;
+  }
   dom.innerHTML = '<div class="loader"></div>';
 
   try {
@@ -195,39 +199,109 @@ async function fetchTournaments() {
     if (!res.ok) throw new Error(`HTTPエラー: ${res.status}`);
 
     const data = await res.json();
-    if (!data || !data.data) throw new Error('データが不正です');
 
-    const tournaments = data.data;
-    if (!tournaments.length) {
+    // events 配列の検出（互換性を持たせる）
+    let events = [];
+    if (Array.isArray(data.events)) events = data.events;
+    else if (Array.isArray(data.data?.events)) events = data.data.events;
+    else if (Array.isArray(data.data)) events = data.data;
+    else {
+      // API の返りが想定外なら空にしてエラー表示
+      dom.innerHTML = '<div class="error">トーナメント情報が見つかりません（レスポンス形式が想定と異なります）。</div>';
+      return;
+    }
+
+    if (!events.length) {
       dom.innerHTML = '<div class="error">トーナメント情報はありません。</div>';
       return;
     }
 
-    const html = tournaments.map(t => {
-      let rewards = '';
-      if (t.rewardDescription) {
-        rewards = `<li><strong>報酬:</strong> ${t.rewardDescription}</li>`;
-      } else if (t.cosmetics && t.cosmetics.length > 0) {
-        rewards = '<li><strong>報酬アイテム:</strong><ul>';
-        t.cosmetics.forEach(c => {
-          rewards += `<li>${c.name} - ${c.description}<br><img src="${c.images.icon}" alt="${c.name}" style="max-width:48px;vertical-align:middle;border-radius:0.3em;"></li>`;
-        });
-        rewards += '</ul></li>';
+    // HTML 生成
+    const html = events.map((e, idx) => {
+      const title = escapeHtml(e.eventGroup || e.displayDataId || e.eventId || 'イベント名不明');
+      const begin = e.beginTime_jst || toJpDate(e.beginTime);
+      const end = e.endTime_jst || toJpDate(e.endTime);
+      const announce = e.announcementTime_jst || toJpDate(e.announcementTime);
+      const minLevel = e.metadata?.minimumAccountLevel ?? '不明';
+      const type = e.metadata?.tournamentType ?? '不明';
+      const regions = Array.isArray(e.regions) ? escapeHtml(e.regions.join(', ')) : '不明';
+      const platforms = Array.isArray(e.platforms) ? escapeHtml(e.platforms.join(', ')) : '不明';
+      const linkInfo = e.link ? `${escapeHtml(e.link.code || '')}${e.link.type ? ` (${escapeHtml(e.link.type)})` : ''}` : 'なし';
+
+      // eventWindows を整形
+      const windows = Array.isArray(e.eventWindows) ? e.eventWindows : [];
+      const windowsHtml = windows.length ? windows.map((w, wi) => {
+        const wId = escapeHtml(w.eventWindowId || `window_${wi+1}`);
+        const wBegin = w.beginTime_jst || toJpDate(w.beginTime);
+        const wEnd = w.endTime_jst || toJpDate(w.endTime);
+        const wCountdown = w.countdownBeginTime_jst || toJpDate(w.countdownBeginTime);
+        const roundType = w.metadata?.RoundType || '不明';
+        const canSpectate = (typeof w.canLiveSpectate === 'boolean') ? (w.canLiveSpectate ? '可' : '不可') : '不明';
+        const visibility = w.visibility || '不明';
+        const requireAll = Array.isArray(w.requireAllTokens) && w.requireAllTokens.length ? escapeHtml(w.requireAllTokens.join(', ')) : 'なし';
+        const requireNone = Array.isArray(w.requireNoneTokensCaller) && w.requireNoneTokensCaller.length ? escapeHtml(w.requireNoneTokensCaller.join(', ')) : 'なし';
+        const scoreLoc = Array.isArray(w.scoreLocations) && w.scoreLocations.length
+          ? w.scoreLocations.map(sl => `${escapeHtml(sl.leaderboardDefId || '')}${sl.isMainWindowLeaderboard ? ' (Main)' : ''}`).join(', ')
+          : 'なし';
+
+        return `
+          <div class="window">
+            <ul class="info-list">
+              <li><strong>#${wi+1}:</strong> ${wId}</li>
+              <li><strong>開始:</strong> ${wBegin}</li>
+              <li><strong>終了:</strong> ${wEnd}</li>
+              <li><strong>カウントダウン開始:</strong> ${wCountdown}</li>
+              <li><strong>ラウンドタイプ:</strong> ${escapeHtml(roundType)}</li>
+              <li><strong>観戦:</strong> ${escapeHtml(canSpectate)}</li>
+              <li><strong>visibility:</strong> ${escapeHtml(visibility)}</li>
+              <li><strong>必要トークン:</strong> ${requireAll}</li>
+              <li><strong>除外トークン:</strong> ${requireNone}</li>
+              <li><strong>スコア位置:</strong> ${scoreLoc}</li>
+            </ul>
+          </div>
+        `;
+      }).join('') : '<div class="info-list">ウィンドウ情報なし</div>';
+
+      // 報酬表示（もしあれば）
+      // 新仕様のeventsには直接 cosmetics 配列がないかもしれないが、万一あれば表示する
+      let rewardsHtml = '';
+      if (e.rewardDescription) {
+        rewardsHtml = `<li><strong>報酬:</strong> ${escapeHtml(e.rewardDescription)}</li>`;
+      } else if (Array.isArray(e.cosmetics) && e.cosmetics.length) {
+        const list = e.cosmetics.map(c => `<li>${escapeHtml(c.name)} - ${escapeHtml(c.description || '')}${c.images?.icon ? `<br><img src="${escapeHtml(c.images.icon)}" alt="${escapeHtml(c.name)}" style="max-width:48px;vertical-align:middle;border-radius:0.3em;">` : ''}</li>`).join('');
+        rewardsHtml = `<li><strong>報酬アイテム:</strong><ul>${list}</ul></li>`;
       }
-      return `<div class="card">
-        <ul class="info-list">
-          <li><strong>イベント名:</strong> ${t.eventName || '不明'}</li>
-          <li><strong>開始日時:</strong> ${toJpDate(t.eventStart)}</li>
-          <li><strong>終了日時:</strong> ${toJpDate(t.eventEnd)}</li>
-          ${rewards}
-        </ul>
-      </div>`;
+
+      return `
+        <details class="card" ${idx === 0 ? 'open' : ''}>
+          <summary>
+            <strong>${title}</strong>
+            <span style="margin-left:10px;color:#666;">${escapeHtml(begin)} 〜 ${escapeHtml(end)}</span>
+          </summary>
+          <div class="card-body">
+            <ul class="info-list">
+              <li><strong>イベントID:</strong> ${escapeHtml(e.eventId || '')}</li>
+              <li><strong>発表日時:</strong> ${escapeHtml(announce)}</li>
+              <li><strong>開始日時:</strong> ${escapeHtml(begin)}</li>
+              <li><strong>終了日時:</strong> ${escapeHtml(end)}</li>
+              <li><strong>最小アカウントレベル:</strong> ${escapeHtml(minLevel)}</li>
+              <li><strong>大会タイプ:</strong> ${escapeHtml(type)}</li>
+              <li><strong>リージョン:</strong> ${regions}</li>
+              <li><strong>プラットフォーム:</strong> ${platforms}</li>
+              <li><strong>リンク:</strong> ${linkInfo}</li>
+              ${rewardsHtml}
+            </ul>
+
+            <h4>イベントウィンドウ</h4>
+            ${windowsHtml}
+          </div>
+        </details>
+      `;
     }).join('');
 
     dom.innerHTML = `<div class="card-list">${html}</div>`;
-
   } catch (err) {
-    dom.innerHTML = `<div class="error">トーナメント情報取得失敗: ${err.message}</div>`;
+    dom.innerHTML = `<div class="error">トーナメント情報取得失敗: ${escapeHtml(err.message)}</div>`;
   }
 }
 
