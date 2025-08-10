@@ -191,7 +191,7 @@ async function fetchTournaments() {
     const region = 'Asia';
     const platform = 'Windows';
 
-    const res = await fetch(`${BASE_URL_NOT_V2}/tournamentlist?region=${region}&platform=${platform}&cosmeticsinfo=true`);
+    const res = await fetch(`${BASE_URL_NOT_V2}/tournamentlist?region=${region}&platform=${platform}&cosmeticsinfo=false`);
     if (!res.ok) throw new Error(`HTTPエラー: ${res.status}`);
 
     const data = await res.json();
