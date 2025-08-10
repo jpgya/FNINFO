@@ -188,7 +188,7 @@ async function fetchTournaments() {
   dom.innerHTML = '<div class="loader"></div>';
 
   try {
-    const region = 'Asia';
+    const region = 'ASIA';
     const platform = 'Windows';
 
     const res = await fetch(`${BASE_URL_NOT_V2}/tournamentlist?region=${region}&platform=${platform}`);
