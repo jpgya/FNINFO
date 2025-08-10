@@ -6,7 +6,7 @@
 ![FN INFO Logo](./a0970552-2c0e-4f72-8761-16c3ba8a4f17.png)
 
 ## 概要
-**FN INFO** は、[FLJP API v2](https://fljpapi.com/) を利用して  
+**FN INFO** は、[FLJP API v2](https://fljpapi.jp/) を利用して  
 フォートナイトのニュース、イベント、ビルド情報、プレイヤー検索などを  
 ブラウザから簡単に確認できる Web ツールです。  
 GitHub Pages 上でホストされ、インストール不要で利用可能です。
