@@ -377,36 +377,56 @@ async function fetchPlaylists() {
   }
 }
 
-// ユーザー検索
 async function fetchUserInfo(accountId) {
   const dom = document.getElementById('user-result');
+  if (!dom) {
+    console.warn('DOM element #user-result が見つかりません');
+    return;
+  }
   dom.innerHTML = '<div class="loader"></div>';
+
   try {
-    // まとめて名前取得 (単一ユーザーも配列で)
+    // ユーザー情報取得
     const lookupRes = await fetch(`${BASE_URL}/lookup?accountid=${accountId}`);
+    if (!lookupRes.ok) throw new Error(`HTTPエラー: ${lookupRes.status}`);
     const lookupData = await lookupRes.json();
-    if (!lookupData || !lookupData.data || !lookupData.data.length) throw new Error('アカウントが見つかりません');
-    const userName = lookupData.data[0].displayName || '不明';
+
+    // オブジェクト形式の対応
+    let userName = '不明';
+    let userId = accountId;
+    if (lookupData && typeof lookupData === 'object') {
+      // 最初のキーを取得
+      const firstKey = Object.keys(lookupData)[0];
+      if (firstKey && lookupData[firstKey]) {
+        userName = lookupData[firstKey].displayName || '不明';
+        userId = lookupData[firstKey].id || accountId;
+      }
+    }
 
     // ランク取得
-    const rankRes = await fetch(`${BASE_URL}/rank/${accountId}`);
+    const rankRes = await fetch(`${BASE_URL}/rank/${userId}`);
+    if (!rankRes.ok) throw new Error(`HTTPエラー: ${rankRes.status}`);
     const rankData = await rankRes.json();
 
     let rankHtml = '';
     if (rankData && rankData.data) {
       const rd = rankData.data;
-      rankHtml = `<ul class="info-list">`;
-      rankHtml += `<li><strong>ユーザー名:</strong> ${userName}</li>`;
-      rankHtml += `<li><strong>ランクポイント:</strong> ${rd.rankPoints ?? '不明'}</li>`;
-      rankHtml += `<li><strong>ランク:</strong> ${rd.rank ?? '不明'}</li>`;
-      rankHtml += `<li><strong>最高ランク:</strong> ${rd.topRank ?? '不明'}</li>`;
-      rankHtml += `</ul>`;
+      rankHtml = `
+        <ul class="info-list">
+          <li><strong>ユーザー名:</strong> ${escapeHtml(userName)}</li>
+          <li><strong>アカウントID:</strong> ${escapeHtml(userId)}</li>
+          <li><strong>ランクポイント:</strong> ${escapeHtml(rd.rankPoints ?? '不明')}</li>
+          <li><strong>ランク:</strong> ${escapeHtml(rd.rank ?? '不明')}</li>
+          <li><strong>最高ランク:</strong> ${escapeHtml(rd.topRank ?? '不明')}</li>
+        </ul>
+      `;
     } else {
       rankHtml = `<div class="error">ランク情報が見つかりません。</div>`;
     }
+
     dom.innerHTML = `<div class="card">${rankHtml}</div>`;
   } catch (err) {
-    dom.innerHTML = `<div class="error">ユーザー情報取得失敗: ${err.message}</div>`;
+    dom.innerHTML = `<div class="error">ユーザー情報取得失敗: ${escapeHtml(err.message)}</div>`;
   }
 }
 
