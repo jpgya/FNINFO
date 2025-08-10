@@ -23,7 +23,7 @@ GitHub Pages 上でホストされ、インストール不要で利用可能で�
 
 ## 使用技術
 - HTML / CSS / JavaScript
-- [FLJP API v2](https://fljpapi.com/)（非公式フォートナイトAPI）
+- [FLJP API v2](https://fljpapi.jp/)（非公式フォートナイトAPI）
 - GitHub Pages（ホスティング）
 - GitHub Actions（自動デプロイ）
 
