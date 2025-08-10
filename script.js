@@ -174,21 +174,30 @@ async function fetchHotfix() {
 }
 
 
+// 日付を日本時間表記の簡易変換（ISO文字列→"YYYY年MM月DD日 HH時mm分"）
+function toJpDate(isoStr) {
+  if (!isoStr) return '不明';
+  const d = new Date(isoStr);
+  // JSTはUTC+9時間なので9時間足す（DateオブジェクトはUTC）
+  d.setHours(d.getHours() + 9);
+  return `${d.getFullYear()}年${(d.getMonth()+1).toString().padStart(2,'0')}月${d.getDate().toString().padStart(2,'0')}日 ${d.getHours().toString().padStart(2,'0')}時${d.getMinutes().toString().padStart(2,'0')}分`;
+}
+
 async function fetchTournaments() {
   const dom = document.getElementById('tournaments');
   dom.innerHTML = '<div class="loader"></div>';
 
   try {
-    // region と platforは固定例。必要に応じて動的化してください。
     const region = 'Asia';
     const platform = 'Windows';
-    const res = await fetch(`${BASE_URL_NOT_V2}/tournamentlist?region=${region}&platform=${platform}&cosmeticsinfo=true`);
-    const data = await res.json();
 
+    const res = await fetch(`${BASE_URL_NOT_V2}/tournamentlist?region=${region}&platform=${platform}&cosmeticsinfo=true`);
+    if (!res.ok) throw new Error(`HTTPエラー: ${res.status}`);
+
+    const data = await res.json();
     if (!data || !data.data) throw new Error('データが不正です');
 
     const tournaments = data.data;
-
     if (!tournaments.length) {
       dom.innerHTML = '<div class="error">トーナメント情報はありません。</div>';
       return;
@@ -198,7 +207,7 @@ async function fetchTournaments() {
       let rewards = '';
       if (t.rewardDescription) {
         rewards = `<li><strong>報酬:</strong> ${t.rewardDescription}</li>`;
-      } else if (t.cosmetics) {
+      } else if (t.cosmetics && t.cosmetics.length > 0) {
         rewards = '<li><strong>報酬アイテム:</strong><ul>';
         t.cosmetics.forEach(c => {
           rewards += `<li>${c.name} - ${c.description}<br><img src="${c.images.icon}" alt="${c.name}" style="max-width:48px;vertical-align:middle;border-radius:0.3em;"></li>`;
@@ -221,6 +230,7 @@ async function fetchTournaments() {
     dom.innerHTML = `<div class="error">トーナメント情報取得失敗: ${err.message}</div>`;
   }
 }
+
 
 async function fetchPlaylists() {
   const dom = document.getElementById('playlists');
