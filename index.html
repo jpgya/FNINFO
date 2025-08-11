@@ -228,7 +228,121 @@ This is an unofficial, fan-made project and has no affiliation with Epic Games, 
     }
   
   
+  /* テロップ本体 */
+  .telop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 9999;
+    background: linear-gradient(90deg,#ff6b6b,#ff9f43);
+    color: #fff;
+    font-weight: 700;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+    overflow: hidden;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    padding: 0 56px 0 12px; /* 閉じるボタン領域確保 */
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Hiragino Kaku Gothic ProN", "Noto Sans JP", "メイリオ", sans-serif;
+  }
+
+  /* スクロールする中身 */
+  .telop__wrap {
+    width: 100%;
+    overflow: hidden;
+  }
+  .telop__content {
+    display: inline-block;
+    white-space: nowrap;
+    padding-left: 100%; /* 右から現れるように */
+    will-change: transform;
+    animation: telop-scroll 16s linear infinite;
+    font-size: 16px;
+    line-height: 1;
+  }
+
+  /* アニメーション（左へスクロール） */
+  @keyframes telop-scroll {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-100%); }
+  }
+
+  /* 閉じるボタン */
+  .telop__close {
+    position: absolute;
+    right: 8px;
+    top: 8px;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(255,255,255,0.12);
+    color: #fff;
+    font-size: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+  }
+  .telop__close:focus { outline: 2px solid rgba(255,255,255,0.6); }
+
+  /* モバイル向け調整 */
+  @media (max-width: 480px) {
+    .telop { height: 44px; padding-right: 48px; }
+    .telop__content { font-size: 14px; animation-duration: 12s; }
+  }
+
+  /* ユーザーがアニメーションを減らしたい場合の配慮 */
+  @media (prefers-reduced-motion: reduce) {
+    .telop__content { animation: none; padding-left: 0; }
+  }
+
+  /* 本文がページのコンテンツと被らないように上マージンを付与する（任意） */
+  body.has-telop { padding-top: 48px; }
+  @media (max-width: 480px) { body.has-telop { padding-top: 44px; } }
 </style>
+
+<div class="telop" role="region" aria-label="サイトからのお知らせ" id="site-telop">
+  <div class="telop__wrap" aria-hidden="false">
+    <div class="telop__content" id="telop-text">
+      本日（2025/08/11）アップデート試行のため22時よりページを一時停止します。ご不便をおかけしますがご了承ください。
+    </div>
+  </div>
+  <button class="telop__close" id="telop-close" aria-label="テロップを閉じる">×</button>
+</div>
+
+<script>
+  // body に上部余白を付ける（必要なら）
+  document.documentElement.classList.add('telop-enabled');
+  document.body.classList.add('has-telop');
+
+  // 閉じるボタン — ローカルストレージに記録して再表示を防ぐ（24時間）
+  (function(){
+    const telop = document.getElementById('site-telop');
+    const btn = document.getElementById('telop-close');
+    const key = 'telop-closed-until';
+
+    // 既に閉じられているかチェック
+    try {
+      const val = localStorage.getItem(key);
+      if (val && +val > Date.now()) {
+        telop.style.display = 'none';
+        document.body.classList.remove('has-telop');
+      }
+    } catch(e){ /* storage が使えないときは無視 */ }
+
+    btn.addEventListener('click', () => {
+      telop.style.display = 'none';
+      document.body.classList.remove('has-telop');
+      try {
+        const until = Date.now() + 24 * 60 * 60 * 1000; // 24時間非表示
+        localStorage.setItem(key, String(until));
+      } catch(e){}
+    });
+  })();
+</script>
+
 </body>
 
 </html>
