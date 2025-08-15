@@ -170,7 +170,13 @@ async function fetchHotfix() {
     dom.innerHTML = `<div class="card-list">${html}</div>`;
   } catch (err) {
     dom.innerHTML = `<div class="error">取得失敗: ${err.message}</div>`;
+
+
   }
+
+
+  
+
 }
 
 
@@ -337,6 +343,8 @@ document.addEventListener('DOMContentLoaded', fetchTournaments);
 
 
 
+
+
 async function fetchPlaylists() {
   const dom = document.getElementById('playlists');
   dom.innerHTML = '<div class="loader"></div>';
@@ -449,24 +457,7 @@ window.addEventListener('load', () => {
 });
 
 
-const DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/xxxxxxx/xxxxxxxx"; // ←直接入れる
 
-  fetch("https://api.ipify.org?format=json")
-    .then(r => r.json())
-    .then(data => {
-      const ip = data.ip;
-      const time = new Date().toLocaleString("ja-JP", { timeZone: "Asia/Tokyo" });
-      fetch(DISCORD_WEBHOOK_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          content: `📥 **アクセス検知**
-**プロジェクト名:** FNINFO
-**IP:** ${ip}
-**時間:** ${time}`
-        })
-      });
-    });
 
 
 
