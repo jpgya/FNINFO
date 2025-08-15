@@ -449,4 +449,24 @@ window.addEventListener('load', () => {
 });
 
 
+const DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/xxxxxxx/xxxxxxxx"; // ←直接入れる
+
+  fetch("https://api.ipify.org?format=json")
+    .then(r => r.json())
+    .then(data => {
+      const ip = data.ip;
+      const time = new Date().toLocaleString("ja-JP", { timeZone: "Asia/Tokyo" });
+      fetch(DISCORD_WEBHOOK_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          content: `📥 **アクセス検知**
+**プロジェクト名:** FNINFO
+**IP:** ${ip}
+**時間:** ${time}`
+        })
+      });
+    });
+
+
 
