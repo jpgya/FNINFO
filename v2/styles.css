@@ -2,7 +2,7 @@
 :root {
   --bg-gradient: linear-gradient(to right, #f0f4ff, #dfe9f3);
   --text-color: #222;
-  --card-bg: rgba(255, 255, 255, 0.9);
+  --card-bg: rgb(5, 124, 175);
   --card-hover: rgba(0, 200, 255, 0.1);
   --accent: #007bff;
   --accent2: #00ffd0;
@@ -92,7 +92,7 @@ h2 {
   min-width: 250px;
   flex: 1 1 280px;
   margin-bottom: 0.8rem;
-  color: var(--text-color);
+  color: #ffffff;
   transition: transform 0.2s ease, box-shadow 0.3s ease;
 }
 
