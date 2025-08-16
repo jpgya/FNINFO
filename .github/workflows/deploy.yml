@@ -10,12 +10,27 @@ permissions:
   pages: write
   id-token: write
 
+env:
+  FLJP_API_KEY: ${{ secrets.FLJP_API_KEY }}
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+    
+
+      - name: Inject API Key into v2/script.js
+        run: |
+          # 環境変数 FLJP_API_KEY を v2/script.js に反映
+          sed -i "s|const API_KEY = '.*';|const API_KEY = '${FLJP_API_KEY}';|" v2/script.js
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
