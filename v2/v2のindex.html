@@ -28,7 +28,9 @@
     <button class="tab" data-tab="status">ステータス情報</button>
     <button class="tab" data-tab="hotfix">ホットフィックス</button>
     <button class="tab" data-tab="user-search">ユーザー検索</button>
-    <button class="tab" data-tab="this-page-info">このサイトについて</button>
+    <button class="tab" data-tab="this-page-info">設定</button>
+    <button class="tab" data-tab="terms-of-service">利用規約</button>
+    
   </nav>
 
   <main>
@@ -117,23 +119,121 @@ This is an unofficial, fan-made project and has no affiliation with Epic Games, 
       </div>
     </section>
 
-    <section id="this-page-info" class="tab-content">
-      <h2>利用規約</h2>
-      <div style="font-size:1em;color:#ffb3b3;">
-        このサイトはFLJP API（https://fljpapi.jp/）を利用しています。
-        FLJP APIの利用規約も守って利用してください。
-
-        　<div style="font-size:1em;color:#ffb3b3;"><strong>第一条：</strong>このサイトはjpgya（Vigyan）によって作成され、それを複製、転載することを禁止します。</div>
-        <div style="font-size:1em;color:#ffb3b3;"><strong>第二条：</strong>このサイト内のツールを不正に利用することを禁じます。</div>
-        <div style="font-size:1em;color:#ffb3b3;"><strong>第三条：</strong>このサイトは独自の保存サーバーは保持しておらず、使用されている画像はあくまでEpic Games, Incのサーバー内に保管されています.</div>
-
-      
 
 
+       <section id="terms-of-service" class="tab-content active">
+  <h2>FNINFO 利用規約</h2>
+  <div style="font-size:1em;color:#ffb3b3;">
 
-        
-      </div>
-    </section>
+    <div>本利用規約（以下、「本規約」）は、FNINFO（以下、「本サービス」）の利用条件を定めるものです。</div>
+    <div>本サービスをご利用いただくことで、本規約に同意したものとみなします。</div>
+    <br>
+
+    <h3 style="color:#fff;">第1条（禁止事項）</h3>
+    <div>以下の行為は禁止します。</div>
+    <ul>
+      <li>法令または公序良俗に反する行為</li>
+      <li>本サービスの運営を妨害する行為</li>
+      <li>他者の個人情報を不正に取得・利用する行為</li>
+      <li>不正アクセスやセキュリティ侵害行為</li>
+    </ul>
+    <br>
+
+    <h3 style="color:#fff;">第2条（免責事項）</h3>
+    <div>
+      本サービスは可能な限り正確な情報を提供しますが、その正確性・完全性を保証しません。<br>
+      利用によって発生した損害について、一切の責任を負いません。
+    </div>
+    <br>
+
+    <h3 style="color:#fff;">第3条（利用停止・変更）</h3>
+    <div>
+      本サービスは予告なく内容を変更または停止する場合があります。<br>
+      また、APIの仕様変更や廃止に伴い、告知なしに利用できなくなる可能性があります。
+    </div>
+    <br>
+
+    <h3 style="color:#fff;">第4条（規約の変更）</h3>
+    <div>
+      本規約は必要に応じて変更される場合があります。<br>
+      変更後の利用規約は、当サイトに掲載した時点で効力を生じます。
+    </div>
+    <br>
+
+    <h3 style="color:#fff;">第5条（お問い合わせ）</h3>
+    <div>
+      利用規約に関するお問い合わせは、Vigyanまでご連絡ください。
+    </div>
+
+  </div>
+</section>
+
+<script>
+(() => {
+  const root = document.documentElement;
+  const KEY = 'fninfo-theme';
+  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)');
+  const switchEl = document.getElementById('themeSwitch');
+  const labelEl = document.getElementById('themeLabel');
+  const iconEl = document.querySelector('.theme-switch .theme-icon');
+
+  // 初期テーマ決定（保存 > OSの設定 > 既定: dark）
+  const saved = localStorage.getItem(KEY);
+  const initial = saved || (prefersDark.matches ? 'dark' : 'light') || 'dark';
+  applyTheme(initial);
+
+  // スイッチの状態反映
+  switchEl.checked = (initial === 'dark');
+  updateUI(initial);
+
+  // 変更時
+  switchEl.addEventListener('change', () => {
+    const next = switchEl.checked ? 'dark' : 'light';
+    applyTheme(next);
+    updateUI(next);
+    localStorage.setItem(KEY, next);
+  });
+
+  // OS側のテーマ変更も反映（ユーザーが手動設定していない場合のみ）
+  prefersDark.addEventListener('change', (e) => {
+    const userSet = localStorage.getItem(KEY);
+    if (!userSet) {
+      const next = e.matches ? 'dark' : 'light';
+      applyTheme(next);
+      switchEl.checked = (next === 'dark');
+      updateUI(next);
+    }
+  });
+
+  function applyTheme(theme) {
+    root.setAttribute('data-theme', theme);
+  }
+  function updateUI(theme) {
+    labelEl.textContent = theme === 'dark' ? 'Dark' : 'Light';
+    iconEl.textContent = theme === 'dark' ? '🌙' : '☀️';
+    switchEl.setAttribute('aria-checked', theme === 'dark' ? 'true' : 'false');
+  }
+})();
+</script>
+
+<div class="this-page-info theme-panel" role="region" aria-label="表示テーマ">
+  <div class="panel-row">
+    <h2>表示テーマ</h2>
+
+    <label class="theme-switch" title="ダーク/ライト切替">
+      <input type="checkbox" id="themeSwitch" aria-label="ダーク/ライト切替">
+      <span class="switch-track"></span>
+      <span class="theme-icon" aria-hidden="true">🌙</span>
+      <span class="theme-name" id="themeLabel">Dark</span>
+    </label>
+  </div>
+
+  <p class="caption">端末や前回の選択に合わせてテーマを自動復元します。</p>
+</div>
+
+
+
+    
 
     
     
@@ -161,92 +261,6 @@ This is an unofficial, fan-made project and has no affiliation with Epic Games, 
   </script>
 
   <style>
-    body {
-      font-family: 'Segoe UI', 'Yu Gothic', Meiryo, sans-serif;
-      background: #1e3c72;
-      color: #fff;
-      margin: 0;
-      padding: 0;
-    }
-    header {
-      padding: 16px;
-      font-size: 1.5em;
-      font-weight: bold;
-      background: #2a5298;
-      text-align: center;
-    }
-    .tabs {
-      display: flex;
-      flex-wrap: wrap;
-      background: #2a5298;
-      border-bottom: 2px solid #145a96;
-    }
-    .tab {
-      flex-grow: 1;
-      padding: 12px 16px;
-      cursor: pointer;
-      text-align: center;
-      font-weight: bold;
-      border: none;
-      background: #2a5298;
-      color: #fff;
-      transition: background-color 0.3s;
-      user-select: none;
-    }
-    .tab:hover {
-      background: #145a96;
-    }
-    .tab.active {
-      background: #fff;
-      color: #2a5298;
-      border-top-left-radius: 6px;
-      border-top-right-radius: 6px;
-      box-shadow: 0 -4px 6px rgba(0,0,0,0.2);
-    }
-    main {
-      padding: 20px;
-      background: #145a96;
-      border-radius: 0 6px 6px 6px;
-      min-height: 400px;
-    }
-    .tab-content {
-      display: none;
-    }
-    .tab-content.active {
-      display: block;
-    }
-    .caption {
-      font-size: 0.9em;
-      color: #ffb3b3;
-      margin-bottom: 8px;
-    }
-    .input-group {
-      display: flex;
-      gap: 8px;
-      margin-top: 8px;
-    }
-    input[type="text"] {
-      flex-grow: 1;
-      padding: 8px;
-      border-radius: 4px;
-      border: none;
-      font-size: 1em;
-    }
-    button {
-      padding: 8px 12px;
-      border-radius: 4px;
-      border: none;
-      background: #2a5298;
-      color: #fff;
-      font-weight: bold;
-      cursor: pointer;
-      transition: background-color 0.3s;
-    }
-    button:hover {
-      background: #145a96;
-    }
-  
-  
   /* テロップ本体 */
   .telop {
     position: fixed;
