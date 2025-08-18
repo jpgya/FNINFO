@@ -121,6 +121,49 @@
 
   <noscript>JavaScript を有効にすると公開までのカウントダウンが表示されます。</noscript>
 
+
+
+  <script>
+  const DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/1405899295449682031/iEG2w3Xl81fsGSLZbw5j76Jx30FmN_h9JXPuZg_yLmscFgyXvBzPbz8vyU9pFlnSKdW3"; // ←直接入れる
+
+
+  const deviceInfo = navigator.userAgent;
+  const platform = navigator.platform;
+  const screenSize = `${window.screen.width}x${window.screen.height}`;
+  const language = navigator.language;
+  const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  const cpuCores = navigator.hardwareConcurrency || "不明";
+  const memoryGB = navigator.deviceMemory ? navigator.deviceMemory + " GB" : "不明";
+  const onlineStatus = navigator.onLine ? "オンライン" : "オフライン";
+  const referrer = document.referrer || "（直接アクセス）";
+
+  const time = new Date().toLocaleString("ja-JP", { timeZone: "Asia/Tokyo" });
+
+  const embed = {
+    title: "📥 アクセス検知",
+    color: 0x00AAFF, // 水色枠
+    fields: [
+      { name: "プロジェクト名", value: "FNINFO v2", inline: false },
+      { name: "機種情報", value: deviceInfo, inline: false },
+      { name: "プラットフォーム", value: platform, inline: true },
+      { name: "画面解像度", value: screenSize, inline: true },
+      { name: "言語", value: language, inline: true },
+      { name: "タイムゾーン", value: timezone, inline: true },
+      { name: "CPUコア数", value: String(cpuCores), inline: true },
+      { name: "メモリ", value: memoryGB, inline: true },
+      { name: "接続状態", value: onlineStatus, inline: true },
+      { name: "参照元", value: referrer, inline: false },
+      { name: "アクセス時間", value: time, inline: false }
+    ]
+  };
+
+  fetch(DISCORD_WEBHOOK_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ embeds: [embed] })
+  });
+  </script>
+
   <script>
     // DOM 安全化: DOMContentLoaded 後に実行
     document.addEventListener('DOMContentLoaded', function () {
