@@ -92,7 +92,7 @@
     <main class="card" role="region" aria-labelledby="headline">
       <h2 id="headline" data-testid="headline">FNINFO v1は <span class="mono">https://jpgya.github.io/FNINFO/v1</span> に移動しました。</h2>
       <p>このページは <strong>FNINFO v2</strong> へのアップデートのため、しばらく停止いたします。</p>
-      <p>FNINFO v2 は <span class="mono">https://jpgya.github.io/FNINFO/v2</span> のページに <strong>2025年8月22日</strong> 公開予定です。</p>
+      <p>FNINFO v2 は <span class="mono">https://jpgya.github.io/FNINFO/v2</span> のページに <strong>2025年8月22日</strong> 公開でしたが、現在開発中のため、延期しています。</p>
 
       <div class="countdown" aria-live="polite">
         <div class="tile"><div class="num" id="d" data-testid="d">--</div><div class="label">日</div></div>
@@ -129,7 +129,7 @@
     // DOM 安全化: DOMContentLoaded 後に実行
     document.addEventListener('DOMContentLoaded', function () {
       const $ = (id) => document.getElementById(id);
-      const target = new Date('2025-08-22T00:00:00+09:00'); // JST 公開予定
+      const target = new Date('2025-08-28T00:00:00+09:00'); // JST 公開予定
 
       // year 要素のフォールバック（なければ生成）
       let yearEl = $('year');
