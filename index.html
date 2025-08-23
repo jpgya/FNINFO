@@ -401,7 +401,6 @@
     loginBtn.addEventListener("click", () => {
       const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?` +
         `client_id=${client_id}&` +
-        `redirect_uri=${encodeURIComponent(redirect_uri)}&` +
         `response_type=token&` +   // サーバーなしならtoken方式（Implicit Flow）
         `scope=${encodeURIComponent(scope)}`;
 
