@@ -387,44 +387,36 @@
   <title>Googleログインテスト</title>
 </head>
 <body>
-  <button id="loginBtn">Googleでログイン</button>
-  <pre id="result"></pre>
+  <div id="g_id_signin"></div>
+  <pre id="result">ログインしていません</pre>
 
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script>
-    const client_id = "919681852395-agj4s5obf7jk3r10ovrdksukj46geb32.apps.googleusercontent.com"; // Google Cloudで作ったクライアントID
-    const redirect_uri = window.location.origin; // このページにリダイレクト
-    const scope = "openid profile email";
-
-    const loginBtn = document.getElementById("loginBtn");
+    const client_id = "919681852395-agj4s5obf7jk3r10ovrdksukj46geb32.apps.googleusercontent.com";
     const result = document.getElementById("result");
 
-    loginBtn.addEventListener("click", () => {
-      const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?` +
-        `client_id=${client_id}&` +
-        `response_type=token&` +   // サーバーなしならtoken方式（Implicit Flow）
-        `scope=${encodeURIComponent(scope)}`;
-
-      window.location.href = authUrl;
-    });
-
-    // リダイレクト後のURLにアクセストークンがあれば取得
-    if (window.location.hash.includes("access_token")) {
-      const params = new URLSearchParams(window.location.hash.slice(1));
-      const token = params.get("access_token");
-
-      // ユーザー情報取得
-      fetch("https://www.googleapis.com/oauth2/v2/userinfo", {
-        headers: { Authorization: `Bearer ${token}` }
-      })
-      .then(res => res.json())
-      .then(data => {
-        result.textContent = JSON.stringify(data, null, 2);
-      })
-      .catch(err => console.error(err));
+    function handleCredentialResponse(response) {
+      const payload = JSON.parse(atob(response.credential.split('.')[1]));
+      result.textContent = `ログイン中: ${payload.name} (${payload.email})`;
     }
+
+    window.onload = () => {
+      google.accounts.id.initialize({
+        client_id: client_id,
+        callback: handleCredentialResponse
+      });
+
+      google.accounts.id.renderButton(
+        document.getElementById("g_id_signin"),
+        { theme: "outline", size: "large" }
+      );
+
+      google.accounts.id.prompt(); // 1回限りのポップアップ表示
+    };
   </script>
 </body>
 </html>
+
 
 
 
