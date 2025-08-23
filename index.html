@@ -380,42 +380,42 @@
           </article>
         </div>
 
-        <!DOCTYPE html>
-<html lang="ja">
-<head>
-  <meta charset="UTF-8">
-  <title>Googleログインテスト</title>
-</head>
-<body>
-  <div id="g_id_signin"></div>
-  <pre id="result">ログインしていません</pre>
+       <div class="tab-panel" id="panel-account" role="tabpanel" aria-labelledby="account-tab">
+  <article class="card">
+    <h2>アカウント情報</h2>
+    <p id="userInfo">ログインしていません</p>
+    
+    <!-- GSIボタン表示場所 -->
+    <div id="g_id_signin"></div>
+  </article>
+</div>
 
-  <script src="https://accounts.google.com/gsi/client" async defer></script>
-  <script>
-    const client_id = "919681852395-agj4s5obf7jk3r10ovrdksukj46geb32.apps.googleusercontent.com";
-    const result = document.getElementById("result");
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<script>
+  const client_id = "919681852395-agj4s5obf7jk3r10ovrdksukj46geb32.apps.googleusercontent.com";
+  const userInfo = document.getElementById("userInfo");
 
-    function handleCredentialResponse(response) {
-      const payload = JSON.parse(atob(response.credential.split('.')[1]));
-      result.textContent = `ログイン中: ${payload.name} (${payload.email})`;
-    }
+  function handleCredentialResponse(response) {
+    const payload = JSON.parse(atob(response.credential.split('.')[1]));
+    userInfo.textContent = `ログイン中: ${payload.name} (${payload.email})`;
+  }
 
-    window.onload = () => {
-      google.accounts.id.initialize({
-        client_id: client_id,
-        callback: handleCredentialResponse
-      });
+  window.onload = () => {
+    google.accounts.id.initialize({
+      client_id: client_id,
+      callback: handleCredentialResponse
+    });
 
-      google.accounts.id.renderButton(
-        document.getElementById("g_id_signin"),
-        { theme: "outline", size: "large" }
-      );
+    // GSIボタンをタブ内に表示
+    google.accounts.id.renderButton(
+      document.getElementById("g_id_signin"),
+      { theme: "outline", size: "large" }
+    );
 
-      google.accounts.id.prompt(); // 1回限りのポップアップ表示
-    };
-  </script>
-</body>
-</html>
+    google.accounts.id.prompt(); // ポップアップ表示
+  };
+</script>
+
 
 
 
