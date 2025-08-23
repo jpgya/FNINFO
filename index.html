@@ -204,7 +204,7 @@
           <span class="icon">📄</span><span class="tab-text">利用規約</span>
         </button>
 
-        <button class="tab-btn" role="tab" id="account-tab" aria-selected="false">
+        <button class="tab-btn" role="tab" id="account-tab" aria-selected="false" data-tab="tab-account">
           <span class="icon">👤</span> ><span class="tab-text">アカウント情報</span>
         </button>
 
@@ -379,11 +379,8 @@
             <p>本規約は日本法に準拠し、紛争は当運営所在地を管轄する裁判所を専属的合意管轄とします。</p>
           </article>
         </div>
-      </section>
-      <!-- Account用のコンテンツ表示領域 -->
-      
 
-      <div class="tab-panel" id="panel-account" role="tabpanel" aria-labelledby="account-tab">
+        <div class="tab-panel" id="panel-account" role="tabpanel" aria-labelledby="account-tab">
   <article class="card">
     <h2>アカウント情報</h2>
     <p id="userInfo">ここにログインフォームやアカウント情報を表示できます。</p>
@@ -394,7 +391,22 @@
   </article>
 </div>
 
-<script src="https://accounts.google.com/gsi/client" async defer></script>
+
+      </section>
+    
+      
+
+      
+
+
+
+
+    </main>
+  </div>
+
+  <div class="errbar" id="errbar" role="status" aria-live="polite"></div>
+
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
 <script>
   const client_id = "919681852395-agj4s5obf7jk3r10ovrdksukj46geb32.apps.googleusercontent.com";
 
@@ -420,14 +432,6 @@
     userInfo.textContent = "ログアウトしました";
   });
 </script>
-
-
-
-
-    </main>
-  </div>
-
-  <div class="errbar" id="errbar" role="status" aria-live="polite"></div>
 
   <script>
     // ===== Helpers =====
