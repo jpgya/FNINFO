@@ -203,6 +203,11 @@
         <button class="tab-btn" role="tab" aria-selected="false" data-tab="terms" id="tab-terms">
           <span class="icon">📄</span><span class="tab-text">利用規約</span>
         </button>
+
+        <button class="tab-btn" id="account-tab" aria-selected="false">
+          <span class="icon">👤</span> Account
+        </button>
+
       </nav>
 
       <div class="footer-note">
@@ -588,6 +593,75 @@
       console.log('[FNINFO tests]', '\n' + results.join('\n'));
       var bar = $('#errbar'); if (bar) { bar.style.display='block'; bar.textContent = 'Self tests done. Open console for details.'; }
     })();
+
+
+    
+  const accountTab = document.getElementById('account-tab');
+  const content = document.getElementById('tab-content');
+  let currentUser = null;
+
+  accountTab.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.setAttribute('aria-selected','false'));
+    accountTab.setAttribute('aria-selected','true');
+    renderAccountView();
+  });
+
+  function renderAccountView() {
+    if (!currentUser) {
+      // 未ログイン時 → Googleログインボタン
+      content.innerHTML = `
+        <h2>Account</h2>
+        <div id="g_id_onload"
+          data-client_id="919681852395-agj4s5obf7jk3r10ovrdksukj46geb32.apps.googleusercontent.com"
+          data-context="signin"
+          data-ux_mode="popup"
+          data-callback="handleCredentialResponse"
+          data-auto_prompt="false">
+        </div>
+        <div class="g_id_signin" data-type="standard"></div>
+      `;
+    } else {
+      // ログイン済み → ユーザー情報とログアウト
+      content.innerHTML = `
+        <h2>Account</h2>
+        <p><strong>Name:</strong> ${currentUser.name}</p>
+        <p><strong>Email:</strong> ${currentUser.email}</p>
+        <img src="${currentUser.picture}" alt="profile" style="border-radius:50%;width:80px;height:80px;" />
+        <br><br>
+        <button id="logout-btn" class="btn">Log out</button>
+      `;
+      document.getElementById('logout-btn').addEventListener('click', () => {
+        google.accounts.id.disableAutoSelect();
+        currentUser = null;
+        renderAccountView();
+      });
+    }
+  }
+
+  function handleCredentialResponse(response) {
+    const data = parseJwt(response.credential);
+    currentUser = {
+      name: data.name,
+      email: data.email,
+      picture: data.picture
+    };
+    renderAccountView();
+  }
+
+  // JWTをデコードする簡易関数
+  function parseJwt(token) {
+    const base64Url = token.split('.')[1];
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const jsonPayload = decodeURIComponent(atob(base64).split('').map(c =>
+      '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)
+    ).join(''));
+    return JSON.parse(jsonPayload);
+  }
+
+
   </script>
+
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+
 </body>
 </html>
