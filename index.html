@@ -381,12 +381,12 @@
         </div>
       </section>
       <!-- Account用のコンテンツ表示領域 -->
-      <div id="tab-content"></div>
+      
 
       <div class="tab-panel" id="panel-account" role="tabpanel" aria-labelledby="account-tab">
   <article class="card">
     <h2>アカウント情報</h2>
-    <p>ここにログインフォームやアカウント情報を表示できます。</p>
+    <p id="userInfo">ここにログインフォームやアカウント情報を表示できます。</p>
     <!-- Googleログインボタン -->
     <button id="loginBtn" class="btn">Googleでログイン</button>
     <!-- ログアウトボタン -->
@@ -394,24 +394,33 @@
   </article>
 </div>
 
+<script src="https://accounts.google.com/gsi/client" async defer></script>
 <script>
-  const client_id = "919681852395-agj4s5obf7jk3r10ovrdksukj46geb32.apps.googleusercontent.com"; // Google CloudのクライアントID
-  const redirect_uri = window.location.origin; // このページにリダイレクト
-  const scope = "openid profile email";
+  const client_id = "919681852395-agj4s5obf7jk3r10ovrdksukj46geb32.apps.googleusercontent.com";
 
   const loginBtn = document.getElementById("loginBtn");
+  const logoutBtn = document.getElementById("logoutBtn");
+  const userInfo = document.getElementById("userInfo");
+  let currentUser = null;
 
   loginBtn.addEventListener("click", () => {
-    const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?` +
-      `client_id=${client_id}&` +
-      `redirect_uri=${encodeURIComponent(redirect_uri)}&` +
-      `response_type=token&` +  // サーバーなしなら token方式
-      `scope=${encodeURIComponent(scope)}`;
+    google.accounts.id.initialize({
+      client_id: client_id,
+      callback: (response) => {
+        const payload = JSON.parse(atob(response.credential.split('.')[1]));
+        currentUser = payload;
+        userInfo.textContent = `ログイン中: ${payload.name} (${payload.email})`;
+      }
+    });
+    google.accounts.id.prompt(); // ログイン画面表示
+  });
 
-    // 新しいタブで開く
-    window.open(authUrl, "_blank", "width=500,height=600");
+  logoutBtn.addEventListener("click", () => {
+    currentUser = null;
+    userInfo.textContent = "ログアウトしました";
   });
 </script>
+
 
 
 
