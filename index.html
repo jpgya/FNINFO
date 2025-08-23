@@ -136,6 +136,40 @@
 
     /* Error bar */
     .errbar { display:none; position: fixed; left: 0; right: 0; bottom: 0; background: #ffeded; color: #8a0417; border-top: 1px solid #f3b1b7; padding: 8px 12px; font-size: 13px; z-index: 9999; }
+
+    /* モバイル対応 */
+@media (max-width: 768px) {
+  .app {
+    grid-template-columns: var(--sidebar-w-collapsed) 1fr;
+  }
+  .app:not(.collapsed) .sidebar {
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: var(--sidebar-w);
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+  }
+  .app.show-sidebar .sidebar {
+    transform: translateX(0);
+  }
+  .collapse-btn {
+    display: inline-block;
+  }
+  header.topbar {
+    justify-content: space-between;
+  }
+  .search {
+    width: 100%;
+    max-width: none;
+  }
+  .content {
+    padding: 16px;
+  }
+}
+
   </style>
 </head>
 <body>
