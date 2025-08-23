@@ -1,208 +1,559 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ja">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>FNINFO v2 アップデート告知</title>
-  <meta name="description" content="FNINFO v1 は移転しました。このページはFNINFO v2へのアップデートのため一時停止中です。v2は 2025年8月22日 公開予定。" />
-  <meta property="og:type" content="website" />
-  <meta property="og:title" content="FNINFO v2 アップデート告知" />
-  <meta property="og:description" content="FNINFO v2 は 2025年8月22日 公開予定です。" />
-  <meta property="og:url" content="https://jpgya.github.io/FNINFO/" />
-  <meta name="theme-color" content="#2a5298" />
+  <title>FNINFO ドキュメント</title>
+  <meta name="description" content="FNINFOの公式ドキュメント。左サイドの収納式タブメニューで各セクションを高速に切替。">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Noto+Sans+JP:wght@400;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
   <style>
-    :root{
-      --bg1:#1e3c72; /* FNINFOっぽいグラデ */
-      --bg2:#2a5298;
-      --card-bg:rgba(255,255,255,.08);
-      --card-border:rgba(255,255,255,.22);
-      --text:#fff;
-      --accent:#8bd3ff;
-      --muted:rgba(255,255,255,.7);
-      --ok:#50fa7b; --ng:#ff6b6b;
+    /* ===== THEME (Water Blue) ===== */
+    :root {
+      --bg: #eef7fc;
+      --panel: #ffffff;
+      --panel-2: #e8f4fc;
+      --text: #0f172a;
+      --muted: #5b6b7f;
+      --accent: #4fc3f7; /* light water */
+      --accent-2: #0288d1; /* deep water */
+      --accent-3: #7fd8ff; /* highlight */
+      --border: #dbe7f3;
+      --shadow: 0 12px 30px rgba(2,136,209,.12);
+      --radius: 18px;
+      --sidebar-w: 300px;
+      --sidebar-w-collapsed: 76px;
     }
-    *{box-sizing:border-box}
-    html,body{height:100%}
-    body{
-      margin:0;color:var(--text);
-      font-family:'Inter','Noto Sans JP','Segoe UI','Yu Gothic','Meiryo',system-ui,-apple-system,Arial,sans-serif;
-      background: linear-gradient(135deg,var(--bg1),var(--bg2));
-      background-size: 200% 200%;
-      animation: bgmove 18s ease-in-out infinite;
-      -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale;
-      display:flex;align-items:center;justify-content:center;padding:24px;
+    [data-theme="dark"] {
+      --bg: #0b1220;
+      --panel: #0f1a2b;
+      --panel-2: #0b1626;
+      --text: #e8eef6;
+      --muted: #9fb3c8;
+      --accent: #4fc3f7;
+      --accent-2: #79c9ff;
+      --accent-3: #38bdf8;
+      --border: #1f2b3d;
+      --shadow: 0 14px 36px rgba(0,0,0,.45);
     }
-    @keyframes bgmove{0%{background-position:0% 0%}50%{background-position:100% 100%}100%{background-position:0% 0%}}
-
-    .wrap{width:100%;max-width:860px}
-
-    header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px}
-    .brand{display:flex;align-items:center;gap:12px}
-    .logo{width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,#7dd3fc,#60a5fa);display:grid;place-items:center;color:#0b234b;font-weight:800;box-shadow:0 8px 30px rgba(0,0,0,.25)}
-    .brand h1{font-size:20px;margin:0;font-weight:800;letter-spacing:.3px}
-
-    .card{border:1px solid var(--card-border);background:var(--card-bg);backdrop-filter: blur(8px);border-radius:24px;padding:28px;box-shadow:0 10px 40px rgba(0,0,0,.25)}
-
-    h2{margin:0 0 8px 0;font-size:28px;line-height:1.2}
-    p{margin:0 0 12px 0;color:var(--muted)}
-
-    .badge{display:inline-flex;align-items:center;gap:8px;background:rgba(139,211,255,.15);border:1px solid rgba(139,211,255,.45);color:var(--accent);padding:6px 10px;border-radius:999px;font-size:12px;font-weight:600;letter-spacing:.3px}
-
-    .countdown{display:flex;gap:12px;margin:18px 0 8px;flex-wrap:wrap}
-    .tile{min-width:110px;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:16px;border-radius:18px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.18)}
-    .num{font-size:36px;font-weight:800;letter-spacing:.5px}
-    .label{font-size:12px;opacity:.85}
-
-    .links{display:flex;gap:12px;flex-wrap:wrap;margin-top:18px}
-    .btn{appearance:none;border:1px solid rgba(255,255,255,.35);background:rgba(255,255,255,.08);color:#fff;padding:12px 16px;border-radius:14px;text-decoration:none;font-weight:700;transition:.2s;display:inline-flex;gap:8px;align-items:center}
-    .btn:hover{transform:translateY(-1px);box-shadow:0 8px 24px rgba(0,0,0,.25)}
-    .btn.primary{background:#ffffff;color:#0b234b;border-color:#fff}
-    .btn.ghost{background:transparent}
-
-    footer{margin-top:14px;color:var(--muted);font-size:12px;text-align:center}
-    .mono{font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace}
-
-    .notice{margin-top:8px;font-size:14px;color:var(--muted)}
-
-    /* Diagnostics (開発者向けテスト表示) */
-    details.tests{margin-top:16px}
-    .test-pass{color:var(--ok)} .test-fail{color:var(--ng)}
-
-    @media (max-width:520px){
-      .num{font-size:30px}
-      .tile{min-width:90px}
-      h2{font-size:22px}
-      .brand h1{font-size:18px}
+    @media (prefers-color-scheme: dark) {
+      :root { color-scheme: dark; }
+      body:not([data-force-light]) { background: var(--bg); }
     }
+
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      background: radial-gradient(1200px 800px at 10% -10%, color-mix(in oklab, var(--accent) 18%, transparent), transparent),
+                  radial-gradient(900px 600px at 110% 20%, color-mix(in oklab, var(--accent-2) 18%, transparent), transparent),
+                  var(--bg);
+      font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, "Noto Sans JP", Helvetica, Arial, sans-serif;
+      color: var(--text);
+    }
+
+    /* ===== Layout ===== */
+    .app { display: grid; grid-template-columns: var(--sidebar-w) 1fr; min-height: 100vh; transition: grid-template-columns .25s ease; }
+    .app.collapsed { grid-template-columns: var(--sidebar-w-collapsed) 1fr; }
+
+    /* Sidebar */
+    .sidebar {
+      position: sticky; top: 0; height: 100vh;
+      background: linear-gradient(180deg, color-mix(in oklab, var(--accent) 70%, var(--panel)), color-mix(in oklab, var(--accent-2) 70%, var(--panel-2)));
+      border-right: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      display: flex; flex-direction: column; gap: 12px; padding: 16px 12px;
+    }
+    .brand { display:flex; align-items:center; gap:12px; padding:10px; border-radius: 16px; }
+    .logo { width:44px; height:44px; border-radius: 14px; background: radial-gradient(circle at 30% 20%, var(--accent-3), var(--accent)); display:grid; place-items:center; font-weight: 900; color:#00243a; letter-spacing:.5px; }
+    .title { font-weight: 800; letter-spacing: .3px; font-size: 1.06rem; color: #06111a; text-shadow: 0 1px 0 rgba(255,255,255,.25); }
+
+    .collapse-row { display:flex; align-items:center; justify-content: space-between; gap:8px; }
+    .collapse-btn { appearance:none; border:1px solid color-mix(in oklab, var(--accent-2) 30%, var(--border)); background: color-mix(in oklab, var(--panel) 70%, var(--panel-2)); color: var(--muted); padding: 8px 10px; border-radius: 12px; cursor: pointer; transition:.2s ease; font-weight:700; }
+    .collapse-btn:hover { color: var(--text); border-color: var(--accent-2); box-shadow: 0 0 0 4px color-mix(in oklab, var(--accent-2) 18%, transparent); }
+
+    nav.menu { display: grid; gap: 6px; margin-top: 6px; }
+    .tab-btn { display:flex; align-items:center; gap:12px; padding: 12px; border-radius: 12px; border:1px solid transparent; cursor:pointer; color:#0c2431; background: color-mix(in oklab, var(--panel) 60%, var(--panel-2)); transition:.2s ease; text-align:left; width:100%; font: inherit; letter-spacing: .2px; }
+    .tab-btn:hover { background: color-mix(in oklab, var(--accent) 18%, transparent); }
+    .tab-btn[aria-selected="true"] { background: color-mix(in oklab, var(--accent) 25%, transparent); color:#001a28; border-color: color-mix(in oklab, var(--accent-2) 40%, transparent); }
+    .icon { width: 22px; display:grid; place-items:center; opacity:.95; }
+    .footer-note { margin-top:auto; font-size: 12px; color:#073045; opacity:.85; }
+
+    /* Main */
+    .main { display:grid; grid-template-rows: auto 1fr; min-height:100vh; }
+    header.topbar { position: sticky; top:0; z-index: 5; display:flex; gap:12px; align-items:center; justify-content: space-between; padding: 14px 18px; background: color-mix(in oklab, var(--panel) 80%, transparent); border-bottom:1px solid var(--border); backdrop-filter: blur(10px); }
+    .left-wrap { display:flex; gap:12px; align-items:center; }
+
+    .search { width:min(520px, 60vw); background: var(--panel); border:1px solid var(--border); color:var(--text); border-radius: 12px; padding: 10px 12px; outline:none; transition:.2s ease; }
+    .search:focus { border-color: var(--accent-2); box-shadow: 0 0 0 4px color-mix(in oklab, var(--accent-2) 22%, transparent); }
+
+    .badge { display:inline-flex; align-items:center; gap:8px; font-size:12px; padding:6px 12px; border:1px solid var(--border); border-radius:999px; background: color-mix(in oklab, var(--panel-2) 80%, transparent); }
+
+    .toolbar { display:flex; align-items:center; gap:8px; }
+    .btn { appearance:none; border:1px solid var(--border); background: var(--panel); color: var(--text); padding: 8px 10px; border-radius: 12px; cursor:pointer; transition:.2s ease; font-weight:600; }
+    .btn:hover { border-color: var(--accent-2); box-shadow: 0 0 0 4px color-mix(in oklab, var(--accent-2) 18%, transparent); }
+
+    .content { padding: 22px; max-width: 1100px; width: 100%; }
+
+    .card { background: var(--panel); border:1px solid var(--border); border-radius: var(--radius); padding: 20px; box-shadow: var(--shadow); }
+    .grid { display:grid; gap: 16px; }
+    .grid.cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    @media (max-width: 960px) { .grid.cols-2 { grid-template-columns: 1fr; } }
+
+    .muted { color: var(--muted); }
+    .table { width: 100%; border-collapse: collapse; overflow: hidden; border-radius: 12px; font-size: 0.95rem; }
+    .table th, .table td { padding: 10px 12px; border-bottom: 1px solid var(--border); text-align: left; }
+    .table th { background: color-mix(in oklab, var(--panel-2) 60%, transparent); font-weight: 700; }
+
+    .timeline { list-style: none; margin: 0; padding: 0; }
+    .timeline li { display: grid; grid-template-columns: 120px 1fr; gap: 16px; padding: 12px 0; border-bottom: 1px dashed var(--border); }
+    .timeline time { font-weight: 700; color: var(--accent-2); }
+
+    .legal h3 { margin-top: 1.2em; }
+    .legal p { line-height: 1.75; }
+
+    /* Collapsed visuals */
+    .app.collapsed .title, .app.collapsed .tab-text, .app.collapsed .collapse-label, .app.collapsed .footer-note { display: none; }
+    .app.collapsed .sidebar { padding: 16px 8px; }
+    .app.collapsed .tab-btn { justify-content: center; }
+
+    /* Tab panels */
+    .tab-panel { display:none; opacity:0; transform: translateY(8px); }
+    .tab-panel.active { display:block; animation: fade .22s ease forwards; }
+    @keyframes fade { to { opacity:1; transform: translateY(0); } }
+
+    /* Small helpers */
+    .kbd { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12px; padding: 2px 6px; border:1px solid var(--border); border-radius: 6px; background: var(--panel-2); }
+
+    /* Smooth focus */
+    :focus-visible { outline: 3px solid color-mix(in oklab, var(--accent-2) 35%, transparent); outline-offset: 2px; border-radius: 10px; }
+
+    /* Reduce motion */
+    @media (prefers-reduced-motion: reduce) {
+      * { animation: none !important; transition: none !important; }
+    }
+
+    /* Error bar */
+    .errbar { display:none; position: fixed; left: 0; right: 0; bottom: 0; background: #ffeded; color: #8a0417; border-top: 1px solid #f3b1b7; padding: 8px 12px; font-size: 13px; z-index: 9999; }
   </style>
 </head>
 <body>
-  <div class="wrap">
-    <header>
-      <div class="brand">
-        <div class="logo" aria-hidden="true">FN</div>
-        <h1>FNINFO</h1>
-      </div>
-      <span class="badge">メンテナンス中</span>
-    </header>
-
-    <main class="card" role="region" aria-labelledby="headline">
-      <h2 id="headline" data-testid="headline">FNINFO v1は <span class="mono">https://jpgya.github.io/FNINFO/v1</span> に移動しました。</h2>
-      <p>このページは <strong>FNINFO v2</strong> へのアップデートのため、しばらく停止いたします。</p>
-      <p>FNINFO v2 は <span class="mono">https://jpgya.github.io/FNINFO/v2</span> のページに <strong>2025年8月22日</strong> 公開でしたが、現在開発中のため、延期しています。</p>
-
-      <div class="countdown" aria-live="polite">
-        <div class="tile"><div class="num" id="d" data-testid="d">--</div><div class="label">日</div></div>
-        <div class="tile"><div class="num" id="h" data-testid="h">--</div><div class="label">時間</div></div>
-        <div class="tile"><div class="num" id="m" data-testid="m">--</div><div class="label">分</div></div>
-        <div class="tile"><div class="num" id="s" data-testid="s">--</div><div class="label">秒</div></div>
+  <div class="app" id="app">
+    <!-- ===== Sidebar / Tabs ===== -->
+    <aside class="sidebar" aria-label="サイドバー タブメニュー">
+      <div class="collapse-row">
+        <div class="brand" aria-label="ブランド">
+          <div class="logo" aria-hidden="true">FN</div>
+          <div class="title">FNINFO Docs</div>
+        </div>
+        <button class="collapse-btn" id="toggleSidebar" aria-expanded="true" title="サイドバーを収納/展開 (C)"><span class="collapse-label">収納</span> ⟨⟩</button>
       </div>
 
-      <div class="links">
-        <a class="btn ghost" href="https://jpgya.github.io/FNINFO/v1" rel="noopener" target="_blank">v1 を開く</a>
-        <a class="btn primary" href="https://jpgya.github.io/FNINFO/v2" rel="noopener" target="_blank">v2（公開後）</a>
-      </div>
-      <p class="notice">※ 公開までは一時的にアクセスできない場合があります。</p>
+      <nav class="menu" role="tablist" aria-label="セクション切替">
+        <button class="tab-btn" role="tab" aria-selected="true" data-tab="about" id="tab-about">
+          <span class="icon">📘</span><span class="tab-text">FNINFOについて</span>
+        </button>
+        <button class="tab-btn" role="tab" aria-selected="false" data-tab="urls" id="tab-urls">
+          <span class="icon">🔗</span><span class="tab-text">URL参照</span>
+        </button>
+        <button class="tab-btn" role="tab" aria-selected="false" data-tab="news" id="tab-news">
+          <span class="icon">📰</span><span class="tab-text">ニュース</span>
+        </button>
+        <button class="tab-btn" role="tab" aria-selected="false" data-tab="updates" id="tab-updates">
+          <span class="icon">🛠️</span><span class="tab-text">FNINFO v2のアップデート告知</span>
+        </button>
+        <button class="tab-btn" role="tab" aria-selected="false" data-tab="tech" id="tab-tech">
+          <span class="icon">⚙️</span><span class="tab-text">使用技術 & 著作権</span>
+        </button>
+        <button class="tab-btn" role="tab" aria-selected="false" data-tab="terms" id="tab-terms">
+          <span class="icon">📄</span><span class="tab-text">利用規約</span>
+        </button>
+      </nav>
 
-      <!-- 開発者向けテスト表示 -->
-      <details class="tests">
-        <summary>Developer diagnostics</summary>
-        <ul id="test-list" class="mono" aria-live="polite"></ul>
-      </details>
+      <div class="footer-note">
+        <div>⌘/Ctrl + <span class="kbd">K</span> で検索</div>
+        <div><span class="kbd">C</span> でサイドバー収納</div>
+      </div>
+    </aside>
+
+    <!-- ===== Main ===== -->
+    <main class="main">
+      <header class="topbar">
+        <div class="left-wrap">
+          <input id="search" class="search" type="search" placeholder="ドキュメント内検索 (Ctrl/⌘+K)" aria-label="検索" />
+          <span class="badge" id="activeTabLabel">📘 FNINFOについて</span>
+          <a class="badge" id="hashLink" href="#about" title="このタブへのリンクをコピー">#about</a>
+        </div>
+        <div class="toolbar">
+          <button id="themeToggle" class="btn" title="テーマ切替">🌙/☀️</button>
+          <a class="btn" href="https://twitter.com/FNINFO_jpgya" target="_blank" rel="noopener" title="連絡先 Twitter">@FNINFO_jpgya</a>
+        </div>
+      </header>
+
+      <section class="content" id="contentRoot">
+        <!-- === About === -->
+        <div class="tab-panel active" id="panel-about" role="tabpanel" aria-labelledby="tab-about">
+          <div class="grid cols-2">
+            <article class="card">
+              <h2>FNINFOについて</h2>
+              <p>FNINFO は、Fortnite 関連のニュース・イベント・ビルド情報・アカウント検索をまとめて閲覧できる情報ツール群です。運営は <strong>VigyaN</strong> が行っています。</p>
+              <ul>
+                <li>目的：Fortnite 情報の集約・可視化と、プレイヤーに役立つツール提供</li>
+                <li>対象：プレイヤー／競技参加者／運営関係者／開発者</li>
+                <li>連絡先：Twitter <a href="https://twitter.com/FNINFO_jpgya" target="_blank" rel="noopener">@FNINFO_jpgya</a></li>
+              </ul>
+            </article>
+            <aside class="card">
+              <h3>クイック情報</h3>
+              <ul>
+                <li>現行バージョン：<strong>v2</strong></li>
+                <li>最終更新日：<time id="lastUpdated" datetime=""></time></li>
+                <li>ホスティング：GitHub Pages</li>
+              </ul>
+              <p class="muted">本ドキュメントは単一HTMLで動作し、外部ライブラリに依存しません（フォントを除く）。</p>
+            </aside>
+          </div>
+        </div>
+
+        <!-- === URLs === -->
+        <div class="tab-panel" id="panel-urls" role="tabpanel" aria-labelledby="tab-urls">
+          <article class="card">
+            <h2>URL参照</h2>
+            <table class="table" aria-label="リンク一覧">
+              <thead>
+                <tr><th>名前</th><th>説明</th><th>URL</th></tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>FNINFO v1</td>
+                  <td>初期版サイト</td>
+                  <td><a href="https://jpgya.github.io/FNINFO/v1" target="_blank" rel="noopener">jpgya.github.io/FNINFO/v1</a></td>
+                </tr>
+                <tr>
+                  <td>FNINFO v2</td>
+                  <td>現行版サイト</td>
+                  <td><a href="https://jpgya.github.io/FNINFO/v2" target="_blank" rel="noopener">jpgya.github.io/FNINFO/v2</a></td>
+                </tr>
+                <tr>
+                  <td>FLJP API v2</td>
+                  <td>外部API（利用規約順守）</td>
+                  <td><a href="https://fljpapi.com/ja" target="_blank" rel="noopener">fljpapi.com/ja</a></td>
+                </tr>
+              </tbody>
+            </table>
+          </article>
+        </div>
+
+        <!-- === News === -->
+        <div class="tab-panel" id="panel-news" role="tabpanel" aria-labelledby="tab-news">
+          <article class="card">
+            <h2>ニュース（更新履歴・お知らせ）</h2>
+            <ul class="timeline" id="newsList">
+              <li>
+                <time datetime="2025-08-23">2025-08-23</time>
+                <div>
+                  <strong>FNINFO ドキュメント公開</strong>
+                  <p class="muted">ドキュメント構成を刷新。タブ切替・検索・ダークモード対応。</p>
+                </div>
+              </li>
+              <li>
+                <time datetime="2025-08-23">2025-08-23</time>
+                <div>
+                  <strong>FNINFO v2 公開告知</strong>
+                  <p class="muted">ニュース／イベント／ビルド情報／アカウント検索を統合。</p>
+                </div>
+              </li>
+            </ul>
+          </article>
+        </div>
+
+        <!-- === Updates === -->
+        <div class="tab-panel" id="panel-updates" role="tabpanel" aria-labelledby="tab-updates">
+          <article class="card">
+            <h2>FNINFO v2のアップデート告知</h2>
+            <ul class="timeline" id="updateList">
+              <li>
+                <time datetime="2025-08-21">2025-08-21</time>
+                <div>
+                  <strong>v2 公開</strong>
+                  <p>UI 刷新、検索の高速化、各機能の統合。</p>
+                </div>
+              </li>
+              <li>
+                <time datetime="2025-08-10">2025-08-10</time>
+                <div>
+                  <strong>プレリリース</strong>
+                  <p>内部テスト版を公開。主要な API 連携の安定化。</p>
+                </div>
+              </li>
+            </ul>
+          </article>
+        </div>
+
+        <!-- === Tech === -->
+        <div class="tab-panel" id="panel-tech" role="tabpanel" aria-labelledby="tab-tech">
+          <article class="card">
+            <h2>使用技術 & 著作権</h2>
+            <div class="grid cols-2">
+              <section>
+                <h3>主要技術</h3>
+                <ul>
+                  <li>ホスティング：GitHub Pages</li>
+                  <li>フロントエンド：HTML / CSS / JavaScript（Vanilla）</li>
+                  <li>API：FLJP API v2</li>
+                  <li>ビルド・ランタイム：不要（静的サイト）</li>
+                </ul>
+              </section>
+              <section>
+                <h3>著作権・クレジット</h3>
+                <ul>
+                  <li>© <span id="year"></span> VigyaN</li>
+                  <li>Fortnite は Epic Games の登録商標です。表示名・画像等は権利者に帰属します。</li>
+                  <li>外部 API は各規約・レート制限に従います。</li>
+                </ul>
+              </section>
+            </div>
+          </article>
+        </div>
+
+        <!-- === Terms === -->
+        <div class="tab-panel" id="panel-terms" role="tabpanel" aria-labelledby="tab-terms">
+          <article class="card legal">
+            <h2>利用規約</h2>
+            <h3>1. 適用</h3>
+            <p>本規約は、FNINFO（以下「本サービス」）の提供条件および本サービスの利用に関する当運営と利用者との間の権利義務関係を定めるものです。</p>
+            <h3>2. 禁止事項</h3>
+            <ul>
+              <li>法令または公序良俗に反する行為</li>
+              <li>不正アクセス、過度なリクエスト等によるサービス妨害</li>
+              <li>第三者の知的財産権・プライバシー権の侵害</li>
+              <li>API キー等の秘匿情報の無断公開</li>
+            </ul>
+            <h3>3. 免責</h3>
+            <p>当運営は、本サービスの正確性・完全性・有用性等について保証しません。本サービスの利用に起因して利用者に生じた損害について、一切の責任を負いません。</p>
+            <h3>4. プライバシー</h3>
+            <p>本サービスは個人情報の取扱いに関し、別途定める方針に従います。取得するログ等の内容と目的は、必要最小限に限定します。</p>
+            <h3>5. 規約の変更</h3>
+            <p>当運営は、必要に応じて本規約を変更できるものとします。変更後の規約は、本サービス上に掲載した時点で効力を生じます。</p>
+            <h3>6. 準拠法・管轄</h3>
+            <p>本規約は日本法に準拠し、紛争は当運営所在地を管轄する裁判所を専属的合意管轄とします。</p>
+          </article>
+        </div>
+      </section>
     </main>
-
-    <footer>
-      © <span id="year" data-testid="year"></span> FNINFO. All rights reserved.
-    </footer>
   </div>
 
-  <noscript>JavaScript を有効にすると公開までのカウントダウンが表示されます。</noscript>
-
-
-
-  
+  <div class="errbar" id="errbar" role="status" aria-live="polite"></div>
 
   <script>
-    // DOM 安全化: DOMContentLoaded 後に実行
-    document.addEventListener('DOMContentLoaded', function () {
-      const $ = (id) => document.getElementById(id);
-      const target = new Date('2025-08-28T00:00:00+09:00'); // JST 公開予定
+    // ===== Helpers =====
+    var $ = function(s, r){ return (r||document).querySelector(s); };
+    var $$ = function(s, r){ return Array.prototype.slice.call((r||document).querySelectorAll(s)); };
 
-      // year 要素のフォールバック（なければ生成）
-      let yearEl = $('year');
-      if (!yearEl) {
-        const footer = document.querySelector('footer');
-        yearEl = document.createElement('span');
-        yearEl.id = 'year';
-        if (footer) footer.append(' ', yearEl); else document.body.appendChild(yearEl);
-      }
-      yearEl.textContent = new Date().getFullYear();
+    // ===== Error capture (to surface hidden errors like "Script error.") =====
+    (function(){
+      var bar = $('#errbar');
+      window.addEventListener('error', function(ev){
+        if (!bar) return;
+        bar.style.display = 'block';
+        bar.textContent = 'Script error: ' + (ev && ev.message ? ev.message : 'unknown');
+      });
+      window.addEventListener('unhandledrejection', function(ev){
+        if (!bar) return;
+        bar.style.display = 'block';
+        var msg = (ev && ev.reason && (ev.reason.message || ev.reason.toString())) || 'unhandled promise rejection';
+        bar.textContent = 'Script error: ' + msg;
+      });
+    })();
 
-      function pad(n){return String(n).padStart(2,'0')}
-      function setText(id, value){ const el = $(id); if (el) el.textContent = value; }
+    // ===== Persistent UI State =====
+    var app = $('#app');
+    var toggleBtn = $('#toggleSidebar');
+    var themeToggle = $('#themeToggle');
 
-      function tick(){
-        const now = new Date();
-        const diff = target - now;
-        if (diff <= 0){
-          setText('d','00'); setText('h','00'); setText('m','00'); setText('s','00');
-          const headline = $('headline');
-          if(headline){ headline.textContent = 'FNINFO v2 が公開されました。'; }
-          clearInterval(intervalHandle);
-          return;
-        }
-        const sec = Math.floor(diff / 1000);
-        const days = Math.floor(sec / 86400);
-        const hours = Math.floor((sec % 86400) / 3600);
-        const minutes = Math.floor((sec % 3600) / 60);
-        const seconds = sec % 60;
-        setText('d', pad(days));
-        setText('h', pad(hours));
-        setText('m', pad(minutes));
-        setText('s', pad(seconds));
-      }
-
-      // 初回実行 & インターバル開始
-      tick();
-      const intervalHandle = setInterval(tick, 1000);
-
-      // --- Developer tests (非破壊) ---
-      const tests = [];
-      function addTest(name, pass, info=''){
-        tests.push({name, pass, info});
-      }
-      // Test 1: year span の存在
-      addTest('footer year span exists', !!$('year'));
-      // Test 2: カウントダウン要素の存在
-      addTest('countdown IDs exist (d/h/m/s/headline)', !!$('d') && !!$('h') && !!$('m') && !!$('s') && !!$('headline'));
-      // Test 3: カウントダウン動作（公開前後どちらでもOK）
-      setTimeout(() => {
-        const d = $('d')?.textContent || '--';
-        const h = $('h')?.textContent || '--';
-        const m = $('m')?.textContent || '--';
-        const s = $('s')?.textContent || '--';
-        const text = $('headline')?.textContent || '';
-        const allZero = d==='00' && h==='00' && m==='00' && s==='00';
-        const looksNumeric = /^\d{1,3}$/.test(d) && /^\d{2}$/.test(h) && /^\d{2}$/.test(m) && /^\d{2}$/.test(s);
-        const ok = looksNumeric || (allZero && text.includes('公開されました'));
-        addTest('countdown updates or shows published state', ok, `d=${d} h=${h} m=${m} s=${s}`);
-        renderTests();
-      }, 1200);
-
-      function renderTests(){
-        const ul = document.getElementById('test-list');
-        if (!ul) return;
-        ul.innerHTML = '';
-        tests.forEach(t => {
-          const li = document.createElement('li');
-          li.innerHTML = `${t.pass ? '✅' : '❌'} <span class="${t.pass ? 'test-pass' : 'test-fail'}">${t.name}</span>${t.info?` <span style="opacity:.8">(${t.info})</span>`:''}`;
-          ul.appendChild(li);
-        });
-      }
+    function setCollapsed(v) {
+      if (!app || !toggleBtn) return;
+      if (v) app.classList.add('collapsed'); else app.classList.remove('collapsed');
+      toggleBtn.setAttribute('aria-expanded', String(!v));
+      try { localStorage.setItem('fninfo.sidebar.collapsed', v ? '1' : '0'); } catch(e){}
+    }
+    if (toggleBtn) {
+      toggleBtn.addEventListener('click', function(){ setCollapsed(!app.classList.contains('collapsed')); });
+    }
+    document.addEventListener('keydown', function(e){
+      if (e.key && e.key.toLowerCase() === 'c' && !e.metaKey && !e.ctrlKey && !e.altKey) setCollapsed(!app.classList.contains('collapsed'));
     });
+    try { if (localStorage.getItem('fninfo.sidebar.collapsed') === '1') setCollapsed(true); } catch(e){}
+
+    // Theme
+    function setTheme(mode){
+      document.documentElement.setAttribute('data-theme', mode);
+      try { localStorage.setItem('fninfo.theme', mode); } catch(e){}
+    }
+    try { var savedTheme = localStorage.getItem('fninfo.theme'); if (savedTheme) setTheme(savedTheme); } catch(e){}
+    if (themeToggle) themeToggle.addEventListener('click', function(){ setTheme(document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark'); });
+
+    // Dates
+    (function(){
+      var d = new Date();
+      var y = $('#year'); if (y) y.textContent = d.getFullYear();
+      var lu = $('#lastUpdated');
+      if (lu) { lu.dateTime = d.toISOString().slice(0,10); lu.textContent = d.toLocaleDateString('ja-JP'); }
+    })();
+
+    // ===== Tabs / Hash routing / A11y =====
+    var panels = {
+      about: $('#panel-about'),
+      urls: $('#panel-urls'),
+      news: $('#panel-news'),
+      updates: $('#panel-updates'),
+      tech: $('#panel-tech'),
+      terms: $('#panel-terms')
+    };
+    var labels = {
+      about: '📘 FNINFOについて',
+      urls: '🔗 URL参照',
+      news: '📰 ニュース',
+      updates: '🛠️ FNINFO v2のアップデート告知',
+      tech: '⚙️ 使用技術 & 著作権',
+      terms: '📄 利用規約'
+    };
+    var tabButtons = $$('.tab-btn');
+    var activeTabLabel = $('#activeTabLabel');
+    var hashLink = $('#hashLink');
+
+    function safeUpdateHash(name){
+      try {
+        if (typeof history !== 'undefined' && history.replaceState && location.protocol !== 'file:') {
+          history.replaceState(null, '', '#' + name);
+        } else {
+          var prev = document.documentElement.style.scrollBehavior;
+          document.documentElement.style.scrollBehavior = 'auto';
+          location.hash = name;
+          document.documentElement.style.scrollBehavior = prev;
+        }
+      } catch(e) {
+        // swallow to avoid breaking in file:// or older engines
+      }
+    }
+
+    function activateTab(name, push, focusTab) {
+      // Toggle panel visibility
+      for (var key in panels) {
+        if (!panels.hasOwnProperty(key)) continue;
+        var el = panels[key]; if (!el) continue;
+        if (key === name) el.classList.add('active'); else el.classList.remove('active');
+      }
+      // Set aria-selected on buttons
+      tabButtons.forEach(function(btn){ btn.setAttribute('aria-selected', String(btn.getAttribute('data-tab') === name)); });
+      // Header badge & hash link
+      if (activeTabLabel) activeTabLabel.textContent = labels[name] || name;
+      if (hashLink) hashLink.href = '#' + name;
+      if (push !== false) safeUpdateHash(name);
+      try { localStorage.setItem('fninfo.activeTab', name); } catch(e){}
+      if (focusTab) { var t = document.getElementById('tab-' + name); if (t) t.focus(); }
+    }
+
+    // Click handlers
+    tabButtons.forEach(function(btn){ btn.addEventListener('click', function(){ activateTab(btn.getAttribute('data-tab')); }); });
+
+    // Keyboard navigation (arrow keys within tablist)
+    var tablist = document.querySelector('nav.menu');
+    if (tablist) {
+      tablist.addEventListener('keydown', function(e){
+        var idx = tabButtons.findIndex(function(b){ return b.getAttribute('aria-selected') === 'true'; });
+        if (e.key === 'ArrowDown' || e.key === 'ArrowUp') e.preventDefault();
+        if (e.key === 'ArrowDown') {
+          var next = tabButtons[(idx + 1) % tabButtons.length]; if (next) next.focus();
+        } else if (e.key === 'ArrowUp') {
+          var prev = tabButtons[(idx - 1 + tabButtons.length) % tabButtons.length]; if (prev) prev.focus();
+        } else if (e.key === 'Enter' || e.key === ' ') {
+          var focused = document.activeElement;
+          if (focused && focused.classList && focused.classList.contains('tab-btn')) activateTab(focused.getAttribute('data-tab'));
+        }
+      });
+    }
+
+    // Boot: from hash or storage
+    (function(){
+      var bootTab = (location.hash ? location.hash.replace('#','') : (function(){ try { return localStorage.getItem('fninfo.activeTab'); } catch(e){ return null; } })()) || 'about';
+      activateTab(panels[bootTab] ? bootTab : 'about', false);
+    })();
+
+    // ===== Search (current tab filter + highlight) =====
+    var search = $('#search');
+    function clearHighlights(root){
+      if (!root) return;
+      var marks = root.querySelectorAll('mark.fnmark');
+      marks.forEach(function(m){
+        var p = m.parentNode;
+        while (m.firstChild) p.insertBefore(m.firstChild, m);
+        p.removeChild(m);
+      });
+    }
+    function highlight(root, q){
+      clearHighlights(root);
+      if (!q) return;
+      var walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, { acceptNode: function(n){ return n.nodeValue && n.nodeValue.trim() ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT; } });
+      var nodes = []; var node; while((node = walker.nextNode())) nodes.push(node);
+      nodes.forEach(function(t){
+        var text = t.nodeValue; var lower = text.toLowerCase(); var idx = 0; var found = false;
+        while ((idx = lower.indexOf(q, idx)) !== -1) {
+          found = true;
+          var range = document.createRange();
+          range.setStart(t, idx); range.setEnd(t, idx + q.length);
+          var mark = document.createElement('mark'); mark.className='fnmark'; mark.style.padding='0 2px'; mark.style.borderRadius='4px';
+          range.surroundContents(mark);
+          // After surrounding, the text node splits; move idx forward past this match
+          idx += q.length;
+          lower = t.nodeValue.toLowerCase();
+        }
+      });
+    }
+    function filterCurrent(q){
+      var current = null;
+      for (var key in panels) { if (panels[key] && panels[key].classList.contains('active')) { current = panels[key]; break; } }
+      if (!current) return;
+      var blocks = current.querySelectorAll('p, li, td, h2, h3');
+      blocks.forEach(function(n){ var t = (n.textContent || '').toLowerCase(); n.style.opacity = (q && t.indexOf(q) === -1) ? 0.35 : 1; });
+      highlight(current, q);
+    }
+    if (search) {
+      search.addEventListener('input', function(){ filterCurrent(search.value.trim().toLowerCase()); });
+      document.addEventListener('keydown', function(e){ if ((e.ctrlKey||e.metaKey) && e.key && e.key.toLowerCase()==='k') { e.preventDefault(); search.focus(); search.select(); } });
+    }
+
+    // ===== Minimal Self Tests (run with ?runTests=1) =====
+    (function(){
+      if (!/runTests=1/.test(location.search)) return;
+      var results = [];
+      function assert(name, cond){ results.push((cond? '✅ ':'❌ ') + name + (cond?'':' (failed)')); }
+      try {
+        // Test 1: tabs ↔ panels mapping
+        assert('All panels exist', !!(panels.about && panels.urls && panels.news && panels.updates && panels.tech && panels.terms));
+        assert('Tab buttons exist', tabButtons.length >= 6);
+        // Test 2: activateTab toggles states without throwing & updates aria
+        ['about','urls','news','updates','tech','terms'].forEach(function(t){
+          activateTab(t, false);
+          var activeBtn = $$('.tab-btn').find(function(b){ return b.getAttribute('aria-selected')==='true'; });
+          assert('Panel active for '+t, panels[t] && panels[t].classList.contains('active'));
+          assert('Aria-selected on tab '+t, activeBtn && activeBtn.getAttribute('data-tab')===t);
+        });
+        // Test 3: search highlight doesn't throw and creates <mark>
+        activateTab('about', false);
+        filterCurrent('fninfo');
+        var marks = $('#panel-about').querySelectorAll('mark.fnmark');
+        assert('Search highlighting created marks', marks.length > 0);
+        // Test 4: hash update safe even on file://
+        safeUpdateHash('about');
+        assert('safeUpdateHash executed', true);
+      } catch(e) {
+        results.push('❌ Exception during tests: ' + e.message);
+      }
+      console.log('[FNINFO tests]', '\n' + results.join('\n'));
+      var bar = $('#errbar'); if (bar) { bar.style.display='block'; bar.textContent = 'Self tests done. Open console for details.'; }
+    })();
   </script>
 </body>
 </html>
