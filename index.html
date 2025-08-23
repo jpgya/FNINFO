@@ -384,13 +384,35 @@
       <div id="tab-content"></div>
 
       <div class="tab-panel" id="panel-account" role="tabpanel" aria-labelledby="account-tab">
-       <article class="card">
-       <h2>アカウント情報</h2>
-       <p>ここにログインフォームやアカウント情報を表示できます。</p>
-       <button id="loginBtn" class="btn">ログイン</button>
-       <button id="logoutBtn" class="btn">ログアウト</button>
-       </article>
-      </div>
+  <article class="card">
+    <h2>アカウント情報</h2>
+    <p>ここにログインフォームやアカウント情報を表示できます。</p>
+    <!-- Googleログインボタン -->
+    <button id="loginBtn" class="btn">Googleでログイン</button>
+    <!-- ログアウトボタン -->
+    <button id="logoutBtn" class="btn">ログアウト</button>
+  </article>
+</div>
+
+<script>
+  const client_id = "919681852395-agj4s5obf7jk3r10ovrdksukj46geb32.apps.googleusercontent.com"; // Google CloudのクライアントID
+  const redirect_uri = window.location.origin; // このページにリダイレクト
+  const scope = "openid profile email";
+
+  const loginBtn = document.getElementById("loginBtn");
+
+  loginBtn.addEventListener("click", () => {
+    const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?` +
+      `client_id=${client_id}&` +
+      `redirect_uri=${encodeURIComponent(redirect_uri)}&` +
+      `response_type=token&` +  // サーバーなしなら token方式
+      `scope=${encodeURIComponent(scope)}`;
+
+    // 新しいタブで開く
+    window.open(authUrl, "_blank", "width=500,height=600");
+  });
+</script>
+
 
 
     </main>
@@ -619,58 +641,8 @@
     renderAccountView();
   });
 
-  function renderAccountView() {
-    if (!currentUser) {
-      // 未ログイン時 → Googleログインボタン
-      content.innerHTML = `
-        <h2>Account</h2>
-        <div id="g_id_onload"
-          data-client_id="919681852395-agj4s5obf7jk3r10ovrdksukj46geb32.apps.googleusercontent.com"
-          data-context="signin"
-          data-ux_mode="popup"
-          data-callback="handleCredentialResponse"
-          data-auto_prompt="false">
-        </div>
-        <div class="g_id_signin" data-type="standard"></div>
-      `;
-    } else {
-      // ログイン済み → ユーザー情報とログアウト
-      content.innerHTML = `
-        <h2>Account</h2>
-        <p><strong>Name:</strong> ${currentUser.name}</p>
-        <p><strong>Email:</strong> ${currentUser.email}</p>
-        <img src="${currentUser.picture}" alt="profile" style="border-radius:50%;width:80px;height:80px;" />
-        <br><br>
-        <button id="logout-btn" class="btn">Log out</button>
-      `;
-      document.getElementById('logout-btn').addEventListener('click', () => {
-        google.accounts.id.disableAutoSelect();
-        currentUser = null;
-        renderAccountView();
-      });
-    }
-  }
-
-  function handleCredentialResponse(response) {
-    const data = parseJwt(response.credential);
-    currentUser = {
-      name: data.name,
-      email: data.email,
-      picture: data.picture
-    };
-    renderAccountView();
-  }
-
-  // JWTをデコードする簡易関数
-  function parseJwt(token) {
-    const base64Url = token.split('.')[1];
-    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-    const jsonPayload = decodeURIComponent(atob(base64).split('').map(c =>
-      '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)
-    ).join(''));
-    return JSON.parse(jsonPayload);
-  }
-
+  
+  
 
   </script>
 
