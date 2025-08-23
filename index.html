@@ -385,8 +385,10 @@
     <h2>アカウント情報</h2>
     <p id="userInfo">ログインしていません</p>
 
-    <!-- Googleログインボタン表示 -->
+    <!-- Googleログインボタン表-->
+    
     <div id="g_id_signin"></div>
+    <button id="logoutBtn" class="btn">ログアウト</button>
   </article>
 </div>
 
@@ -414,8 +416,16 @@
       { theme: "outline", size: "large" }
     );
 
+    
+
     google.accounts.id.prompt(); // ポップアップ表示
   };
+
+  logoutBtn.addEventListener("click", () => {
+    currentUser = null;
+    userInfo.textContent = "ログアウトしました";
+  });
+
 </script>
 
 
