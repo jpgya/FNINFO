@@ -380,16 +380,53 @@
           </article>
         </div>
 
-        <div class="tab-panel" id="panel-account" role="tabpanel" aria-labelledby="account-tab">
-  <article class="card">
-    <h2>アカウント情報</h2>
-    <p id="userInfo">ここにログインフォームやアカウント情報を表示できます。</p>
-    <!-- Googleログインボタン -->
-    <button id="loginBtn" class="btn">Googleでログイン</button>
-    <!-- ログアウトボタン -->
-    <button id="logoutBtn" class="btn">ログアウト</button>
-  </article>
-</div>
+        <!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>Googleログインテスト</title>
+</head>
+<body>
+  <button id="loginBtn">Googleでログイン</button>
+  <pre id="result"></pre>
+
+  <script>
+    const client_id = "YOUR_CLIENT_ID"; // Google Cloudで作ったクライアントID
+    const redirect_uri = window.location.origin; // このページにリダイレクト
+    const scope = "openid profile email";
+
+    const loginBtn = document.getElementById("loginBtn");
+    const result = document.getElementById("result");
+
+    loginBtn.addEventListener("click", () => {
+      const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?` +
+        `client_id=${client_id}&` +
+        `redirect_uri=${encodeURIComponent(redirect_uri)}&` +
+        `response_type=token&` +   // サーバーなしならtoken方式（Implicit Flow）
+        `scope=${encodeURIComponent(scope)}`;
+
+      window.location.href = authUrl;
+    });
+
+    // リダイレクト後のURLにアクセストークンがあれば取得
+    if (window.location.hash.includes("access_token")) {
+      const params = new URLSearchParams(window.location.hash.slice(1));
+      const token = params.get("access_token");
+
+      // ユーザー情報取得
+      fetch("https://www.googleapis.com/oauth2/v2/userinfo", {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      .then(res => res.json())
+      .then(data => {
+        result.textContent = JSON.stringify(data, null, 2);
+      })
+      .catch(err => console.error(err));
+    }
+  </script>
+</body>
+</html>
+
 
 
       </section>
@@ -406,32 +443,7 @@
 
   <div class="errbar" id="errbar" role="status" aria-live="polite"></div>
 
-  <script src="https://accounts.google.com/gsi/client" async defer></script>
-<script>
-  const client_id = "919681852395-agj4s5obf7jk3r10ovrdksukj46geb32.apps.googleusercontent.com";
-
-  const loginBtn = document.getElementById("loginBtn");
-  const logoutBtn = document.getElementById("logoutBtn");
-  const userInfo = document.getElementById("userInfo");
-  let currentUser = null;
-
-  loginBtn.addEventListener("click", () => {
-    google.accounts.id.initialize({
-      client_id: client_id,
-      callback: (response) => {
-        const payload = JSON.parse(atob(response.credential.split('.')[1]));
-        currentUser = payload;
-        userInfo.textContent = `ログイン中: ${payload.name} (${payload.email})`;
-      }
-    });
-    google.accounts.id.prompt(); // ログイン画面表示
-  });
-
-  logoutBtn.addEventListener("click", () => {
-    currentUser = null;
-    userInfo.textContent = "ログアウトしました";
-  });
-</script>
+  
 
   <script>
     // ===== Helpers =====
