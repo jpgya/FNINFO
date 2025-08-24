@@ -1,0 +1,2 @@
+body.has-telop { padding-top: 48px; }
+  @media (max-width: 480px) { body.has-telop { padding-top: 44px; } }
