@@ -1,4 +1,3 @@
-// FLJP API v2 対応版スクリプト
 const BASE_URL = 'https://fljpapi.jp/api/v2';
 const BASE_URL_NOT_V2 = 'https://fljpapi.jp/api';
 
@@ -24,9 +23,14 @@ async function fetchNews() {
   dom.innerHTML = '<div class="loader"></div>';
   try {
     const tags = [
-      "Product.BR", "Product.Juno", "Product.BlastBerry",
-      "Product.BR.Habanero", "Product.BR.NoBuild", "Product.Figment",
-      "Product.Sparks", "Product.STW"
+      "Product.BR", 
+      "Product.Juno", 
+      "Product.BlastBerry",
+      "Product.BR.Habanero", 
+      "Product.BR.NoBuild", 
+      "Product.Figment",
+      "Product.Sparks", 
+      "Product.STW"
     ];
     const all = await Promise.all(tags.map(tag =>
       fetch(`${BASE_URL}/news?platform=Windows&language=ja&serverRegion=ASIA&country=JP&tags=${tag}`)
