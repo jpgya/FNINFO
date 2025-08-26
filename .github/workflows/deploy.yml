@@ -1,9 +1,9 @@
-name: Deploy to GitHub Pages
+name: Deploy to GitHub Pages with Discord Notification
 
 on:
   push:
     branches:
-      - main # デプロイしたいブランチ名（例: main, master）
+      - main # デプロイしたいブランチ
 
 permissions:
   contents: read
@@ -14,17 +14,46 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
+      # 1. リポジトリを取得
       - name: Check out repository
         uses: actions/checkout@v4
 
-    
+      # 2. GitHub Pages 用にセットアップ
       - name: Setup Pages
         uses: actions/configure-pages@v5
 
+      # 3. 公開するファイルをアップロード
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: . # ルート直下を公開（index.htmlなど静的HTML）
+          path: . # ルート直下を公開 (index.htmlなど)
 
+      # 4. デプロイ実行
       - name: Deploy to GitHub Pages
         uses: actions/deploy-pages@v4
+
+      # 5. Discord通知
+      - name: Notify Discord
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const webhookUrl = process.env.DISCORD_WEBHOOK_URL;
+            const repo = github.context.repo.repo;
+            const branch = github.context.ref.replace('refs/heads/', '');
+            const commit = github.context.payload.head_commit?.message || "コミット情報なし";
+            const url = `https://${repo}.github.io/`;
+            const content = `✅ GitHub Pagesにデプロイ完了！\n` +
+                            `**リポジトリ:** ${repo}\n` +
+                            `**ブランチ:** ${branch}\n` +
+                            `**最新コミット:** ${commit}\n` +
+                            `**公開URL:** <${url}>`;
+            
+            const fetch = require('node-fetch');
+            await fetch(webhookUrl, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ content })
+            });
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
