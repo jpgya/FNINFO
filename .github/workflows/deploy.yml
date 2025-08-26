@@ -1,9 +1,9 @@
-name: Deploy to GitHub Pages with Discord Notification
+name: Deploy to GitHub Pages
 
 on:
   push:
     branches:
-      - main  # デプロイしたいブランチ名
+      - main # デプロイしたいブランチ名（例: main, master）
 
 permissions:
   contents: read
@@ -14,57 +14,17 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      # 1. リポジトリをチェックアウト
       - name: Check out repository
         uses: actions/checkout@v4
 
-      # 2. GitHub Pages セットアップ
+    
       - name: Setup Pages
         uses: actions/configure-pages@v5
 
-      # 3. 公開するファイルをアップロード
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: .  # ルート直下を公開 (index.htmlなど)
+          path: . # ルート直下を公開（index.htmlなど静的HTML）
 
-      # 4. デプロイ実行
       - name: Deploy to GitHub Pages
         uses: actions/deploy-pages@v4
-
-      # 5. Discord通知
-      - name: Notify Discord
-        uses: actions/github-script@v7
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            // 変数名衝突を避けるため githubContext に変更
-            const githubContext = github.context;
-
-            // ブランチ名
-            const branch = githubContext.ref.replace('refs/heads/', '');
-
-            // 最新コミットメッセージ（Pushイベントの場合）
-            const commitMessage = githubContext.payload.head_commit?.message || "コミット情報なし";
-
-            // Discord Webhook URL
-            const webhookUrl = process.env.DISCORD_WEBHOOK_URL;
-
-            // GitHub Pages URL
-            const url = `https://${githubContext.repo.repo}.github.io/`;
-
-            // Discord に送る内容
-            const content = `✅ GitHub Pagesにデプロイ完了！\n` +
-                            `**リポジトリ:** ${githubContext.repo.repo}\n` +
-                            `**ブランチ:** ${branch}\n` +
-                            `**最新コミット:** ${commitMessage}\n` +
-                            `**公開URL:** <${url}>`;
-
-            // fetch は github-script 内でグローバルに使用可能
-            await fetch(webhookUrl, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ content })
-            });
-        env:
-          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
