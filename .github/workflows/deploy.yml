@@ -38,7 +38,7 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const fetch = require('node-fetch');
+            const { HttpClient } = require('@actions/http-client');
 
             // 環境変数からリポジトリ情報
             const [owner, repo] = process.env.GITHUB_REPOSITORY.split('/');
