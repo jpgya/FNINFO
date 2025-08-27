@@ -17,7 +17,6 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v4
 
-    
       - name: Setup Pages
         uses: actions/configure-pages@v5
 
@@ -28,11 +27,6 @@ jobs:
 
       - name: Deploy to GitHub Pages
         uses: actions/deploy-pages@v4
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-     
 
       - name: Send commit diffs to Discord
         run: |
@@ -55,15 +49,18 @@ jobs:
 
           ALL_DIFF=""
           for FILE in $FILES; do
-            DIFF=$(git diff $PREV_SHA $COMMIT_SHA --patch --unified=3 -- "$FILE" | head -c 3500)
-            DIFF_ESCAPED=$(echo "$DIFF" | sed 's/"/\\"/g' | sed ':a;N;$!ba;s/\n/\\n/g')
             NUMSTAT=$(git diff $PREV_SHA $COMMIT_SHA --numstat -- "$FILE")
             ADDED=$(echo "$NUMSTAT" | awk '{print $1}')
             DELETED=$(echo "$NUMSTAT" | awk '{print $2}')
-            ALL_DIFF="$ALL_DIFF**$FILE** (+$ADDED/-$DELETED)\n\`\`\`$DIFF_ESCAPED\`\`\`\n"
+
+            # 差分を取得して Markdown 用に ` をエスケープ
+            FILE_DIFF=$(git diff $PREV_SHA $COMMIT_SHA --patch --unified=3 -- "$FILE" | head -c 3500 | sed 's/`/\\`/g')
+
+            # Embed に追加（コードブロックなし）
+            ALL_DIFF="$ALL_DIFF**$FILE** (+$ADDED/-$DELETED)\n$FILE_DIFF\n\n"
           done
 
-          # Discord に送る JSON を別変数に格納
+          # Discord に送る JSON を jq で生成
           DISCORD_PAYLOAD=$(jq -n \
             --arg title "Commit: $COMMIT_MESSAGE" \
             --arg url "$COMMIT_URL" \
