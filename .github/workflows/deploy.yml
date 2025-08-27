@@ -14,9 +14,11 @@ jobs:
   deploy-and-notify:
     runs-on: ubuntu-latest
     steps:
-      # リポジトリをチェックアウト
+      # リポジトリをフル履歴でチェックアウト
       - name: Check out repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # これで親コミットも取得
 
       # GitHub Pages 設定
       - name: Setup Pages
@@ -26,7 +28,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: . # ルート直下を公開（index.htmlなど静的HTML）
+          path: .  # ルート直下を公開（index.htmlなど静的HTML）
 
       # デプロイ
       - name: Deploy to GitHub Pages
@@ -40,9 +42,10 @@ jobs:
           COMMIT_URL="${{ github.event.head_commit.url }}"
           COMMIT_MESSAGE="${{ github.event.head_commit.message }}"
 
+          # 親コミット取得
           PREV_SHA=$(git rev-parse $COMMIT_SHA^ 2>/dev/null || echo "")
           if [ -z "$PREV_SHA" ]; then
-            echo "初回コミットのため差分なし"
+            echo "初回コミットまたは親がないため差分なし"
             exit 0
           fi
 
@@ -77,19 +80,7 @@ jobs:
             --arg url "$COMMIT_URL" \
             --arg author "$COMMIT_AUTHOR" \
             --arg diff "$ALL_DIFF" \
-            '{
-              embeds: [
-                {
-                  title: $title,
-                  url: $url,
-                  color: 3066993,
-                  fields: [
-                    {name: "Author", value: $author, inline: true},
-                    {name: "Changes", value: $diff, inline: false}
-                  ]
-                }
-              ]
-            }')
+            '{ embeds: [ { title: $title, url: $url, color: 3066993, fields: [ {name:"Author", value:$author, inline:true}, {name:"Changes", value:$diff, inline:false} ] } ] }')
 
           # Discord に送信
           curl -s -H "Content-Type: application/json" -d "$DISCORD_PAYLOAD" ${{ secrets.DISCORD_WEBHOOK_URL }} || echo "Discord通知失敗"
