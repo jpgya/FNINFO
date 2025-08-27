@@ -1,4 +1,4 @@
-name: Deploy and Notify Discord
+name: Deploy Static Site and Notify Discord
 
 on:
   push:
@@ -6,74 +6,19 @@ on:
       - main
 
 permissions:
-  contents: write  # GitHub Actions に push 権限を付与
+  contents: write   # ←これを追加
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      # リポジトリの全履歴を取得
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      # GitHub Pages にデプロイ
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./  # 静的サイトのルートディレクトリを指定
-
-  notify:
-    runs-on: ubuntu-latest
-    needs: deploy
-    steps:
-      # 再度チェックアウト（差分取得用）
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Get commit info
-        run: |
-          COMMIT_SHA="${{ github.event.head_commit.id }}"
-          COMMIT_AUTHOR="${{ github.event.head_commit.author.name }}"
-          COMMIT_URL="${{ github.event.head_commit.url }}"
-          COMMIT_MESSAGE="${{ github.event.head_commit.message }}"
-
-          # 前のコミット SHA を取得（初回コミットは空）
-          PREV_SHA=$(git rev-parse $COMMIT_SHA^ 2>/dev/null || echo "")
-
-          if [ -z "$PREV_SHA" ]; then
-            echo "初回コミットのため差分なし"
-            exit 0
-          fi
-
-          # 変更されたファイルごとにループ
-          FILES=$(git diff --name-only $PREV_SHA $COMMIT_SHA)
-          for FILE in $FILES; do
-            # ファイルごとの差分取得（最大3500文字）
-            DIFF=$(git diff $PREV_SHA $COMMIT_SHA --color --patch --unified=3 -- "$FILE" | head -c 3500)
-            DIFF_ESCAPED=$(echo "$DIFF" | sed 's/"/\\"/g')
-
-            # Embed JSON 作成（ヒアドキュメントは行頭にEOF）
-            PAYLOAD=$(cat <<EOF
-{
-  "embeds": [
-    {
-      "title": "Commit: $COMMIT_MESSAGE",
-      "url": "$COMMIT_URL",
-      "color": 3066993,
-      "fields": [
-        {"name": "Author", "value": "$COMMIT_AUTHOR", "inline": true},
-        {"name": "File", "value": "$FILE", "inline": false},
-        {"name": "Diff", "value": "```diff\n$DIFF_ESCAPED\n```", "inline": false}
-      ]
-    }
-  ]
-}
-EOF
-)
-
-            # Discord に送信
-            curl -H "Content-Type: application/json" -d "$PAYLOAD" ${{ secrets.DISCORD_WEBHOOK_URL }}
-          done
+          publish_dir: ./  # 公開ディレクトリ
