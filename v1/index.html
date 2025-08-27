@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>フォートナイト情報ツール FNINFO (FLJP API v2)</title>
+  <meta name="description" content="フォートナイトのイベント・ニュース・ビルド・ユーザー検索ができる便利ツール">
+  <link rel="stylesheet" href="styles.css">
+  <script defer src="script.js"></script>
+  <link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#000000">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<link rel="apple-touch-icon" href="a0970552-2c0e-4f72-8761-16c3ba8a4f17.png">
+
+</head>
+<body>
+  <header>
+    フォートナイト情報ツール
+  </header>
+  <!-- タブメニュー -->
+  <nav class="tabs">
+    <button class="tab active" data-tab="news">ニュース</button>
+    <button class="tab" data-tab="timeline">イベントスケジュール</button>
+    <button class="tab" data-tab="build">ビルド情報</button>
+    <button class="tab" data-tab="tournaments">トーナメント一覧</button>
+    <button class="tab" data-tab="playlists">プレイリスト情報</button>
+    <button class="tab" data-tab="status">ステータス情報</button>
+    <button class="tab" data-tab="hotfix">ホットフィックス</button>
+    <button class="tab" data-tab="user-search">ユーザー検索</button>
+    <button class="tab" data-tab="this-page-info">このサイトについて</button>
+    <button class="tab" data-tab="terms-of-service">利用規約</button>
+  </nav>
+
+  <main>
+    <!-- 各sectionにid付与 -->
+    <section id="news" class="tab-content active">
+      <h2>最新ニュース（全モード）</h2>
+      <div class="caption">公式ニュースすべてを統合表示</div>
+      <div id="news-content"><div class="loader"></div></div>
+    </section>
+
+    <section id="timeline" class="tab-content">
+      <h2>イベントスケジュール</h2>
+      <div class="caption">現在・今後のゲーム内イベント一覧</div>
+      <div id="timeline-content"><div class="loader"></div></div>
+    </section>
+
+    <section id="build" class="tab-content">
+      <h2>ビルド情報（全プラットフォーム）</h2>
+      <div class="caption">APIで対応しているプラットフォームすべての最新ビルド</div>
+      <div id="build-content"><div class="loader"></div></div>
+    </section>
+
+    <section id="tournaments" class="tab-content">
+      <h2>トーナメント一覧</h2>
+      <div class="caption">最新の大会・報酬情報</div>
+      <div id="tournaments-content"><div class="loader"></div></div>
+    </section>
+
+    <section id="playlists" class="tab-content">
+      <h2>プレイリスト情報</h2>
+      <div class="caption">バトルロワイヤルのプレイリスト一覧</div>
+      <div id="playlists-content"><div class="loader"></div></div>
+    </section>
+
+    <section id="status" class="tab-content">
+      <h2>ステータス情報</h2>
+      <div class="caption">フォートナイトのサーバー・メンテナンス状態</div>
+      <div id="status-content"><div class="loader"></div></div>
+    </section>
+
+    <section id="hotfix" class="tab-content">
+      <h2>ホットフィックス一覧</h2>
+      <div class="caption">Epicが配信しているクライアントホットフィックスファイル</div>
+      <div id="hotfix-content"><div class="loader"></div></div>
+    </section>
+
+    <section id="user-search" class="tab-content">
+      <h2>ユーザー検索（EpicアカウントID）</h2>
+      <div class="caption">EpicアカウントIDからユーザー名・ランク等を調べられます</div>
+      <form id="user-form" autocomplete="off">
+        <div class="input-group">
+          <input type="text" id="epic-name" placeholder="EpicアカウントIDを入力（ユーザー名不可）" required>
+          <button type="submit">検索</button>
+        </div>
+      </form>
+      <div id="user-result"></div>
+    </section>
+
+    
+
+    <section id="this-page-info" class="tab-content">
+      <h2>サイトアップデートについて</h2>
+      <div style="font-size:1em;color:#ffb3b3;">
+        8月18日より、FLJPAPI v3アップデートに基づき、FNINFO v1は別ページへ移行します。
+
+        　<div style="font-size:1em;color:#ffb3b3;">また、FNINFO v1はFNINFO v2へのアップデート後、サポートを終了します。</div>
+        <div style="font-size:1em;color:#ffb3b3;">FNINFOのv1はv2公開後も別ページにてご利用になれます。</div>
+        <div style="font-size:1em;color:#ffb3b3;">ですが、APIも廃止されるため、告知なしに利用不可能になる可能性があります。</div>
+
+      
+
+
+
+        
+      
+      </div>
+    </section>
+
+    <section id="this-page-info" class="tab-content">
+      <h2>このサイトについて</h2>
+      <div style="font-size:1em;color:#ffb3b3;">
+        <div style="font-size:1em;color:#ffb3b3;"><strong>2025-08-08記載：</strong> 本サイトおよび本サービスは、Epic Games, Inc. またはその関連会社が提供・運営するものではありません。
+本サイトは非公式のファン制作によるものであり、Epic Games, Inc. とは一切の提携・関係はありません。
+"Fortnite" およびその関連名称・商標は Epic Games, Inc. の財産です。</div>
+
+        <div style="font-size:1em;color:#ffb3b3;">This site and its services are not provided, operated, or endorsed by Epic Games, Inc. or its affiliates.
+This is an unofficial, fan-made project and has no affiliation with Epic Games, Inc.
+"Fortnite" and all related names and trademarks are the property of Epic Games, Inc.</div>
+      </div>
+    </section>
+
+    
+
+    <section id="terms-of-service" class="tab-content active">
+  <h2>FNINFO 利用規約</h2>
+  <div style="font-size:1em;color:#ffb3b3;">
+
+    <div>本利用規約（以下、「本規約」）は、FNINFO（以下、「本サービス」）の利用条件を定めるものです。</div>
+    <div>本サービスをご利用いただくことで、本規約に同意したものとみなします。</div>
+    <br>
+
+    <h3 style="color:#fff;">第1条（禁止事項）</h3>
+    <div>以下の行為は禁止します。</div>
+    <ul>
+      <li>法令または公序良俗に反する行為</li>
+      <li>本サービスの運営を妨害する行為</li>
+      <li>他者の個人情報を不正に取得・利用する行為</li>
+      <li>不正アクセスやセキュリティ侵害行為</li>
+    </ul>
+    <br>
+
+    <h3 style="color:#fff;">第2条（免責事項）</h3>
+    <div>
+      本サービスは可能な限り正確な情報を提供しますが、その正確性・完全性を保証しません。<br>
+      利用によって発生した損害について、一切の責任を負いません。
+    </div>
+    <br>
+
+    <h3 style="color:#fff;">第3条（利用停止・変更）</h3>
+    <div>
+      本サービスは予告なく内容を変更または停止する場合があります。<br>
+      また、APIの仕様変更や廃止に伴い、告知なしに利用できなくなる可能性があります。
+    </div>
+    <br>
+
+    <h3 style="color:#fff;">第4条（規約の変更）</h3>
+    <div>
+      本規約は必要に応じて変更される場合があります。<br>
+      変更後の利用規約は、当サイトに掲載した時点で効力を生じます。
+    </div>
+    <br>
+
+    <h3 style="color:#fff;">第5条（お問い合わせ）</h3>
+    <div>
+      利用規約に関するお問い合わせは、Vigyanまでご連絡ください。
+    </div>
+
+  </div>
+</section>
+
+
+    
+    
+  </main>
+
+  <script>
+    // タブ切替処理
+    const tabs = document.querySelectorAll('.tab');
+    const contents = document.querySelectorAll('.tab-content');
+
+    tabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        const target = tab.dataset.tab;
+
+        // タブのアクティブ切り替え
+        tabs.forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+
+        // コンテンツの表示切替
+        contents.forEach(c => {
+          c.id === target ? c.classList.add('active') : c.classList.remove('active');
+        });
+      });
+    });
+  </script>
+
+  <style>
+    body {
+      font-family: 'Segoe UI', 'Yu Gothic', Meiryo, sans-serif;
+      background: #1e3c72;
+      color: #fff;
+      margin: 0;
+      padding: 0;
+    }
+    header {
+      padding: 16px;
+      font-size: 1.5em;
+      font-weight: bold;
+      background: #2a5298;
+      text-align: center;
+    }
+    .tabs {
+      display: flex;
+      flex-wrap: wrap;
+      background: #2a5298;
+      border-bottom: 2px solid #145a96;
+    }
+    .tab {
+      flex-grow: 1;
+      padding: 12px 16px;
+      cursor: pointer;
+      text-align: center;
+      font-weight: bold;
+      border: none;
+      background: #2a5298;
+      color: #fff;
+      transition: background-color 0.3s;
+      user-select: none;
+    }
+    .tab:hover {
+      background: #145a96;
+    }
+    .tab.active {
+      background: #fff;
+      color: #2a5298;
+      border-top-left-radius: 6px;
+      border-top-right-radius: 6px;
+      box-shadow: 0 -4px 6px rgba(0,0,0,0.2);
+    }
+    main {
+      padding: 20px;
+      background: #145a96;
+      border-radius: 0 6px 6px 6px;
+      min-height: 400px;
+    }
+    .tab-content {
+      display: none;
+    }
+    .tab-content.active {
+      display: block;
+    }
+    .caption {
+      font-size: 0.9em;
+      color: #ffb3b3;
+      margin-bottom: 8px;
+    }
+    .input-group {
+      display: flex;
+      gap: 8px;
+      margin-top: 8px;
+    }
+    input[type="text"] {
+      flex-grow: 1;
+      padding: 8px;
+      border-radius: 4px;
+      border: none;
+      font-size: 1em;
+    }
+    button {
+      padding: 8px 12px;
+      border-radius: 4px;
+      border: none;
+      background: #2a5298;
+      color: #fff;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+    button:hover {
+      background: #145a96;
+    }
+  
+  
+  /* テロップ本体 */
+  .telop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 9999;
+    background: linear-gradient(90deg,#ff6b6b,#ff9f43);
+    color: #fff;
+    font-weight: 700;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+    overflow: hidden;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    padding: 0 56px 0 12px; /* 閉じるボタン領域確保 */
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Hiragino Kaku Gothic ProN", "Noto Sans JP", "メイリオ", sans-serif;
+  }
+
+  /* スクロールする中身 */
+  .telop__wrap {
+    width: 100%;
+    overflow: hidden;
+  }
+  .telop__content {
+    display: inline-block;
+    white-space: nowrap;
+    padding-left: 100%; /* 右から現れるように */
+    will-change: transform;
+    animation: telop-scroll 16s linear infinite;
+    font-size: 16px;
+    line-height: 1;
+  }
+
+  /* アニメーション（左へスクロール） */
+  @keyframes telop-scroll {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-100%); }
+  }
+
+  /* 閉じるボタン */
+  .telop__close {
+    position: absolute;
+    right: 8px;
+    top: 8px;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(255,255,255,0.12);
+    color: #fff;
+    font-size: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+  }
+  .telop__close:focus { outline: 2px solid rgba(255,255,255,0.6); }
+
+  /* モバイル向け調整 */
+  @media (max-width: 480px) {
+    .telop { height: 44px; padding-right: 48px; }
+    .telop__content { font-size: 14px; animation-duration: 12s; }
+  }
+
+  /* ユーザーがアニメーションを減らしたい場合の配慮 */
+  @media (prefers-reduced-motion: reduce) {
+    .telop__content { animation: none; padding-left: 0; }
+  }
+
+  /* 本文がページのコンテンツと被らないように上マージンを付与する（任意） */
+  body.has-telop { padding-top: 48px; }
+  @media (max-width: 480px) { body.has-telop { padding-top: 44px; } }
+</style>
+
+<div class="telop" role="region" aria-label="サイトからのお知らせ" id="site-telop">
+  <div class="telop__wrap" aria-hidden="false">
+    <div class="telop__content" id="telop-text">
+      FNINFO v2は8月22日公開予定です。
+    </div>
+  </div>
+  <button class="telop__close" id="telop-close" aria-label="テロップを閉じる">×</button>
+</div>
+
+<script>
+  // body に上部余白を付ける（必要なら）
+  document.documentElement.classList.add('telop-enabled');
+  document.body.classList.add('has-telop');
+
+  // 閉じるボタン — ローカルストレージに記録して再表示を防ぐ（24時間）
+  (function(){
+    const telop = document.getElementById('site-telop');
+    const btn = document.getElementById('telop-close');
+    const key = 'telop-closed-until';
+
+    // 既に閉じられているかチェック
+    try {
+      const val = localStorage.getItem(key);
+      if (val && +val > Date.now()) {
+        telop.style.display = 'none';
+        document.body.classList.remove('has-telop');
+      }
+    } catch(e){ /* storage が使えないときは無視 */ }
+
+    btn.addEventListener('click', () => {
+      telop.style.display = 'none';
+      document.body.classList.remove('has-telop');
+      try {
+        const until = Date.now() + 24 * 60 * 60 * 1000; // 24時間非表示
+        localStorage.setItem(key, String(until));
+      } catch(e){}
+    });
+  })();
+</script>
+
+</body>
+
+</html>
