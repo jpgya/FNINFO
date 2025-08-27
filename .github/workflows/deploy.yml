@@ -5,9 +5,6 @@ on:
     branches:
       - main
 
-permissions:
-  contents: write   # ←これを追加
-
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -21,4 +18,48 @@ jobs:
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./  # 公開ディレクトリ
+          publish_dir: ./  # 静的サイトのルートディレクトリ
+
+  notify:
+    runs-on: ubuntu-latest
+    needs: deploy
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get commit diff
+        run: |
+          COMMIT_SHA="${{ github.event.head_commit.id }}"
+          DIFF=$(git diff $COMMIT_SHA~1 $COMMIT_SHA --color --patch --unified=3)
+          echo "$DIFF" | head -c 3500 > diff.txt
+
+      - name: Send to Discord
+        run: |
+          COMMIT_AUTHOR="${{ github.event.head_commit.author.name }}"
+          COMMIT_URL="${{ github.event.head_commit.url }}"
+          COMMIT_MESSAGE="${{ github.event.head_commit.message }}"
+          DIFF=$(cat diff.txt | sed 's/"/\\"/g')
+
+          PAYLOAD=$(cat <<EOF
+          {
+            "embeds": [
+              {
+                "title": "New Commit",
+                "url": "$COMMIT_URL",
+                "color": 3066993,
+                "fields": [
+                  {"name": "Author", "value": "$COMMIT_AUTHOR", "inline": true},
+                  {"name": "Message", "value": "$COMMIT_MESSAGE", "inline": false},
+                  {"name": "Diff", "value": "```diff\n$DIFF\n```", "inline": false}
+                ]
+              }
+            ]
+          }
+          EOF
+          )
+
+          curl -H "Content-Type: application/json" \
+               -d "$PAYLOAD" \
+               ${{ secrets.DISCORD_WEBHOOK_URL }}
