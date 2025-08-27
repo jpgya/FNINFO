@@ -1,21 +1,18 @@
-name: Deploy Static Site and Notify Discord
+name: Deploy and Notify Discord
 
 on:
   push:
     branches:
       - main
 
-
-
 permissions:
-  contents: write   # ←これを追加
+  contents: write
 
 jobs:
-  deploy:
+  deploy-and-notify:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
@@ -23,48 +20,57 @@ jobs:
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./  # 静的サイトのルートディレクトリ
+          publish_dir: ./
+          keep_files: true
 
-  notify:
-    runs-on: ubuntu-latest
-    needs: deploy
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Get commit diff
+      - name: Send commit diffs to Discord
         run: |
           COMMIT_SHA="${{ github.event.head_commit.id }}"
-          DIFF=$(git diff $COMMIT_SHA~1 $COMMIT_SHA --color --patch --unified=3)
-          echo "$DIFF" | head -c 3500 > diff.txt
-
-      - name: Send to Discord
-        run: |
           COMMIT_AUTHOR="${{ github.event.head_commit.author.name }}"
           COMMIT_URL="${{ github.event.head_commit.url }}"
           COMMIT_MESSAGE="${{ github.event.head_commit.message }}"
-          DIFF=$(cat diff.txt | sed 's/"/\\"/g')
 
-          PAYLOAD=$(cat <<EOF
-          {
-            "embeds": [
-              {
-                "title": "New Commit",
-                "url": "$COMMIT_URL",
-                "color": 3066993,
-                "fields": [
-                  {"name": "Author", "value": "$COMMIT_AUTHOR", "inline": true},
-                  {"name": "Message", "value": "$COMMIT_MESSAGE", "inline": false},
-                  {"name": "Diff", "value": "```diff\n$DIFF\n```", "inline": false}
-                ]
-              }
-            ]
-          }
-          EOF
-          )
+          PREV_SHA=$(git rev-parse $COMMIT_SHA^ 2>/dev/null || echo "")
+          if [ -z "$PREV_SHA" ]; then
+            echo "初回コミットのため差分なし"
+            exit 0
+          fi
 
-          curl -H "Content-Type: application/json" \
-               -d "$PAYLOAD" \
-               ${{ secrets.DISCORD_WEBHOOK_URL }}
+          FILES=$(git diff --name-only $PREV_SHA $COMMIT_SHA)
+          if [ -z "$FILES" ]; then
+            echo "差分ファイルなし"
+            exit 0
+          fi
+
+          ALL_DIFF=""
+          for FILE in $FILES; do
+            DIFF=$(git diff $PREV_SHA $COMMIT_SHA --patch --unified=3 -- "$FILE" | head -c 3500)
+            DIFF_ESCAPED=$(echo "$DIFF" | sed 's/"/\\"/g' | sed ':a;N;$!ba;s/\n/\\n/g')
+            NUMSTAT=$(git diff $PREV_SHA $COMMIT_SHA --numstat -- "$FILE")
+            ADDED=$(echo "$NUMSTAT" | awk '{print $1}')
+            DELETED=$(echo "$NUMSTAT" | awk '{print $2}')
+            ALL_DIFF="$ALL_DIFF**$FILE** (+$ADDED/-$DELETED)\n\`\`\`$DIFF_ESCAPED\`\`\`\n"
+          done
+
+          # Discord に送る JSON を別変数に格納
+          DISCORD_PAYLOAD=$(jq -n \
+            --arg title "Commit: $COMMIT_MESSAGE" \
+            --arg url "$COMMIT_URL" \
+            --arg author "$COMMIT_AUTHOR" \
+            --arg diff "$ALL_DIFF" \
+            '{
+              embeds: [
+                {
+                  title: $title,
+                  url: $url,
+                  color: 3066993,
+                  fields: [
+                    {name: "Author", value: $author, inline: true},
+                    {name: "Changes", value: $diff, inline: false}
+                  ]
+                }
+              ]
+            }')
+
+          # Discord に送信
+          curl -s -H "Content-Type: application/json" -d "$DISCORD_PAYLOAD" ${{ secrets.DISCORD_WEBHOOK_URL }} || echo "Discord通知失敗"
