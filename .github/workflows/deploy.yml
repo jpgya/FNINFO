@@ -14,20 +14,25 @@ jobs:
   deploy-and-notify:
     runs-on: ubuntu-latest
     steps:
+      # リポジトリをチェックアウト
       - name: Check out repository
         uses: actions/checkout@v4
 
+      # GitHub Pages 設定
       - name: Setup Pages
         uses: actions/configure-pages@v5
 
+      # アーティファクトをアップロード
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
           path: . # ルート直下を公開（index.htmlなど静的HTML）
 
+      # デプロイ
       - name: Deploy to GitHub Pages
         uses: actions/deploy-pages@v4
 
+      # Discord へコミット差分通知
       - name: Send commit diffs to Discord
         run: |
           COMMIT_SHA="${{ github.event.head_commit.id }}"
@@ -48,15 +53,21 @@ jobs:
           fi
 
           ALL_DIFF=""
+          MAX_CHARS=3500
+
           for FILE in $FILES; do
             NUMSTAT=$(git diff $PREV_SHA $COMMIT_SHA --numstat -- "$FILE")
             ADDED=$(echo "$NUMSTAT" | awk '{print $1}')
             DELETED=$(echo "$NUMSTAT" | awk '{print $2}')
 
-            # 差分を取得して Markdown 用に ` をエスケープ
-            FILE_DIFF=$(git diff $PREV_SHA $COMMIT_SHA --patch --unified=3 -- "$FILE" | head -c 3500 | sed 's/`/\\`/g')
+            # 差分取得して Markdown 用に ` をエスケープ
+            FILE_DIFF=$(git diff $PREV_SHA $COMMIT_SHA --patch --unified=3 -- "$FILE" | sed 's/`/\\`/g')
 
-            # Embed に追加（コードブロックなし）
+            # 長さ制限
+            if [ ${#FILE_DIFF} -gt $MAX_CHARS ]; then
+              FILE_DIFF="${FILE_DIFF:0:$MAX_CHARS}\n... (diff truncated)"
+            fi
+
             ALL_DIFF="$ALL_DIFF**$FILE** (+$ADDED/-$DELETED)\n$FILE_DIFF\n\n"
           done
 
