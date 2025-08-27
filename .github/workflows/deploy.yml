@@ -5,6 +5,11 @@ on:
     branches:
       - main
 
+permissions:
+  contents: write   # ←これを追加
+
+
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
