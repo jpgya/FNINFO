@@ -1,4 +1,4 @@
-name: Deploy and Notify Discord
+name: Deploy Changed Files & Notify Discord
 
 on:
   push:
@@ -18,69 +18,74 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # これで親コミットも取得
+          fetch-depth: 0
 
-      # GitHub Pages 設定
-      - name: Setup Pages
-        uses: actions/configure-pages@v5
-
-      # アーティファクトをアップロード
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: .  # ルート直下を公開（index.htmlなど静的HTML）
-
-      # デプロイ
-      - name: Deploy to GitHub Pages
-        uses: actions/deploy-pages@v4
-
-      # Discord へコミット差分通知
-      - name: Send commit diffs to Discord
+      # 変更されたファイルを取得
+      - name: Determine changed files
+        id: changes
         run: |
           COMMIT_SHA="${{ github.event.head_commit.id }}"
           COMMIT_AUTHOR="${{ github.event.head_commit.author.name }}"
           COMMIT_URL="${{ github.event.head_commit.url }}"
           COMMIT_MESSAGE="${{ github.event.head_commit.message }}"
-
-          # 親コミット取得
           PREV_SHA=$(git rev-parse $COMMIT_SHA^ 2>/dev/null || echo "")
           if [ -z "$PREV_SHA" ]; then
-            echo "初回コミットまたは親がないため差分なし"
+            echo "初回コミットまたは親なし"
+            echo "files=" >> $GITHUB_OUTPUT
             exit 0
           fi
-
           FILES=$(git diff --name-only $PREV_SHA $COMMIT_SHA)
-          if [ -z "$FILES" ]; then
-            echo "差分ファイルなし"
-            exit 0
-          fi
-
+          echo "files=$FILES" >> $GITHUB_OUTPUT
+          # 差分内容もまとめる
           ALL_DIFF=""
-          MAX_CHARS=3500
-
           for FILE in $FILES; do
             NUMSTAT=$(git diff $PREV_SHA $COMMIT_SHA --numstat -- "$FILE")
             ADDED=$(echo "$NUMSTAT" | awk '{print $1}')
             DELETED=$(echo "$NUMSTAT" | awk '{print $2}')
-
-            # 差分取得して Markdown 用に ` をエスケープ
             FILE_DIFF=$(git diff $PREV_SHA $COMMIT_SHA --patch --unified=3 -- "$FILE" | sed 's/`/\\`/g')
-
-            # 長さ制限
-            if [ ${#FILE_DIFF} -gt $MAX_CHARS ]; then
-              FILE_DIFF="${FILE_DIFF:0:$MAX_CHARS}\n... (diff truncated)"
+            if [ ${#FILE_DIFF} -gt 3500 ]; then
+              FILE_DIFF="${FILE_DIFF:0:3500}\n... (diff truncated)"
             fi
-
             ALL_DIFF="$ALL_DIFF**$FILE** (+$ADDED/-$DELETED)\n$FILE_DIFF\n\n"
           done
+          echo "all_diff=$ALL_DIFF" >> $GITHUB_OUTPUT
+          echo "commit_sha=$COMMIT_SHA" >> $GITHUB_OUTPUT
+          echo "commit_author=$COMMIT_AUTHOR" >> $GITHUB_OUTPUT
+          echo "commit_url=$COMMIT_URL" >> $GITHUB_OUTPUT
+          echo "commit_message=$COMMIT_MESSAGE" >> $GITHUB_OUTPUT
 
-          # Discord に送る JSON を jq で生成
+      # Discord に差分通知
+      - name: Send commit diffs to Discord
+        if: steps.changes.outputs.files != ''
+        run: |
           DISCORD_PAYLOAD=$(jq -n \
-            --arg title "Commit: $COMMIT_MESSAGE" \
-            --arg url "$COMMIT_URL" \
-            --arg author "$COMMIT_AUTHOR" \
-            --arg diff "$ALL_DIFF" \
+            --arg title "Commit: ${{ steps.changes.outputs.commit_message }}" \
+            --arg url "${{ steps.changes.outputs.commit_url }}" \
+            --arg author "${{ steps.changes.outputs.commit_author }}" \
+            --arg diff "${{ steps.changes.outputs.all_diff }}" \
             '{ embeds: [ { title: $title, url: $url, color: 3066993, fields: [ {name:"Author", value:$author, inline:true}, {name:"Changes", value:$diff, inline:false} ] } ] }')
-
-          # Discord に送信
           curl -s -H "Content-Type: application/json" -d "$DISCORD_PAYLOAD" ${{ secrets.DISCORD_WEBHOOK_URL }} || echo "Discord通知失敗"
+
+      # 変更ファイルのみ deploy フォルダにコピー
+      - name: Copy changed files to deploy folder
+        if: steps.changes.outputs.files != ''
+        run: |
+          mkdir -p deploy
+          for FILE in ${{ steps.changes.outputs.files }}; do
+            mkdir -p deploy/$(dirname "$FILE")
+            cp "$FILE" "deploy/$FILE"
+          done
+
+      # GitHub Pages 設定
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      # アーティファクトアップロード
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: deploy
+
+      # Pages デプロイ
+      - name: Deploy to GitHub Pages
+        uses: actions/deploy-pages@v4
