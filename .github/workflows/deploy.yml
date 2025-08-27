@@ -30,12 +30,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v3
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./
-          keep_files: true
+     
 
       - name: Send commit diffs to Discord
         run: |
