@@ -1,4 +1,4 @@
-name: Deploy and Notify Discord
+name: Deploy Static Site and Notify Discord
 
 on:
   push:
@@ -6,35 +6,25 @@ on:
       - main
 
 jobs:
-  build:
+  deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
+      - name: Checkout
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0   # 差分取得に必須
-
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-
-      - name: Install and Build
-        run: |
-          npm install
-          npm run build
+          fetch-depth: 0
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./dist   # ビルド出力先に合わせて変更
+          publish_dir: ./  # 静的サイトのルートディレクトリ
 
   notify:
     runs-on: ubuntu-latest
-    needs: build
+    needs: deploy
     steps:
-      - name: Checkout repository
+      - name: Checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
