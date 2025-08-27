@@ -1,4 +1,4 @@
-name: Notify Discord on Commit
+name: Deploy and Notify Discord
 
 on:
   push:
@@ -6,29 +6,52 @@ on:
       - main
 
 jobs:
-  notify:
+  build:
     runs-on: ubuntu-latest
     steps:
-      - name: Fetch commit diff and send to Discord
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # 差分取得に必須
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install and Build
+        run: |
+          npm install
+          npm run build
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./dist   # ビルド出力先に合わせて変更
+
+  notify:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get commit diff
         run: |
           COMMIT_SHA="${{ github.event.head_commit.id }}"
+          DIFF=$(git diff $COMMIT_SHA~1 $COMMIT_SHA --color --patch --unified=3)
+          echo "$DIFF" | head -c 3500 > diff.txt
+
+      - name: Send to Discord
+        run: |
           COMMIT_AUTHOR="${{ github.event.head_commit.author.name }}"
           COMMIT_URL="${{ github.event.head_commit.url }}"
           COMMIT_MESSAGE="${{ github.event.head_commit.message }}"
-          
-          # リポジトリをクローンして差分取得
-          git clone --depth 2 https://github.com/${{ github.repository }} repo
-          cd repo
-          DIFF=$(git diff $COMMIT_SHA~1 $COMMIT_SHA --color)
+          DIFF=$(cat diff.txt | sed 's/"/\\"/g')
 
-          # 長すぎる場合は切り捨て
-          DIFF=$(echo "$DIFF" | head -c 3500)
-
-          # エスケープ
-          DIFF_ESCAPED=$(echo "$DIFF" | sed 's/"/\\"/g')
-          COMMIT_MESSAGE_ESCAPED=$(echo "$COMMIT_MESSAGE" | sed 's/"/\\"/g')
-
-          # JSONを直接構築
           PAYLOAD=$(cat <<EOF
           {
             "embeds": [
@@ -38,8 +61,8 @@ jobs:
                 "color": 3066993,
                 "fields": [
                   {"name": "Author", "value": "$COMMIT_AUTHOR", "inline": true},
-                  {"name": "Message", "value": "$COMMIT_MESSAGE_ESCAPED", "inline": false},
-                  {"name": "Diff", "value": "```diff\n$DIFF_ESCAPED\n```", "inline": false}
+                  {"name": "Message", "value": "$COMMIT_MESSAGE", "inline": false},
+                  {"name": "Diff", "value": "```diff\n$DIFF\n```", "inline": false}
                 ]
               }
             ]
