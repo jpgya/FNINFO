@@ -1,30 +1,44 @@
-name: Deploy to GitHub Pages
+name: Notify Discord on Commit
 
 on:
   push:
     branches:
-      - main # デプロイしたいブランチ名（例: main, master）
-
-permissions:
-  contents: read
-  pages: write
-  id-token: write
+      - main
 
 jobs:
-  deploy:
+  notify:
     runs-on: ubuntu-latest
     steps:
-      - name: Check out repository
-        uses: actions/checkout@v4
+      - name: Fetch commit diff
+        run: |
+          # コミット情報を取得
+          COMMIT_SHA="${{ github.event.head_commit.id }}"
+          COMMIT_AUTHOR="${{ github.event.head_commit.author.name }}"
+          COMMIT_URL="${{ github.event.head_commit.url }}"
+          COMMIT_MESSAGE="${{ github.event.head_commit.message }}"
+          
+          # 差分取得
+          git clone --depth 2 https://github.com/${{ github.repository }} repo
+          cd repo
+          DIFF=$(git diff $COMMIT_SHA~1 $COMMIT_SHA --color)
 
-    
-      - name: Setup Pages
-        uses: actions/configure-pages@v5
+          # 長すぎる場合は切り捨て
+          DIFF="${DIFF:0:3500}"
 
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: . # ルート直下を公開（index.htmlなど静的HTML）
-
-      - name: Deploy to GitHub Pages
-        uses: actions/deploy-pages@v4
+          # JSON ペイロード作成
+          PAYLOAD=$(jq -n \
+            --argjson embeds "[{
+              \"title\": \"New Commit\",
+              \"url\": \"$COMMIT_URL\",
+              \"color\": 3066993,
+              \"fields\": [
+                {\"name\": \"Author\", \"value\": \"$COMMIT_AUTHOR\", \"inline\": true},
+                {\"name\": \"Message\", \"value\": \"$COMMIT_MESSAGE\", \"inline\": false},
+                {\"name\": \"Diff\", \"value\": \"\`\`\`diff\n$DIFF\n\`\`\`\", \"inline\": false}
+              ]
+            }]" \
+            '{embeds: $embeds}')
+          
+          curl -H "Content-Type: application/json" \
+               -d "$PAYLOAD" \
+               ${{ secrets.DISCORD_WEBHOOK_URL }}
