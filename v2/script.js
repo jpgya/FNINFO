@@ -185,16 +185,15 @@ async function fetchHotfix() {
 }
 
 
-// 日付を日本時間表記の簡易変換（ISO文字列→"YYYY年MM月DD日 HH時mm分"）
+
 function toJpDate(isoStr) {
   if (!isoStr) return '不明';
   const d = new Date(isoStr);
-  // JSTはUTC+9時間なので9時間足す（DateオブジェクトはUTC）
+ 
   d.setHours(d.getHours() + 9);
   return `${d.getFullYear()}年${(d.getMonth()+1).toString().padStart(2,'0')}月${d.getDate().toString().padStart(2,'0')}日 ${d.getHours().toString().padStart(2,'0')}時${d.getMinutes().toString().padStart(2,'0')}分`;
 }
 
-// HTMLエスケープ（nullや数値でも安全）
 function escapeHtml(input) {
   if (input === null || input === undefined) return '';
   const str = String(input);
@@ -207,7 +206,6 @@ function escapeHtml(input) {
   })[m]);
 }
 
-// JST変換（必要に応じて修正）
 function toJpDate(isoString) {
   if (!isoString) return '不明';
   try {
@@ -221,7 +219,7 @@ function toJpDate(isoString) {
 
 
 
-// トーナメント情報取得
+
 async function fetchTournaments() {
   const dom = document.getElementById('tournaments');
   if (!dom) {
@@ -239,7 +237,7 @@ async function fetchTournaments() {
 
     const data = await res.json();
 
-    // events 配列の検出
+
     let events = [];
     if (Array.isArray(data.events)) events = data.events;
     else if (Array.isArray(data.data?.events)) events = data.data.events;
@@ -254,7 +252,7 @@ async function fetchTournaments() {
       return;
     }
 
-    // HTML生成
+
     const html = events.map((e, idx) => {
       const title = escapeHtml(e.eventGroup || e.displayDataId || e.eventId || 'イベント名不明');
       const begin = e.beginTime_jst || toJpDate(e.beginTime);
@@ -343,7 +341,7 @@ async function fetchTournaments() {
   }
 }
 
-// ページ読み込み後に自動実行
+
 document.addEventListener('DOMContentLoaded', fetchTournaments);
 
 
@@ -399,16 +397,16 @@ async function fetchUserInfo(accountId) {
   dom.innerHTML = '<div class="loader"></div>';
 
   try {
-    // ユーザー情報取得
+ 
     const lookupRes = await fetch(`${BASE_URL}/lookup?accountid=${accountId}`);
     if (!lookupRes.ok) throw new Error(`HTTPエラー: ${lookupRes.status}`);
     const lookupData = await lookupRes.json();
 
-    // オブジェクト形式の対応
+ 
     let userName = '不明';
     let userId = accountId;
     if (lookupData && typeof lookupData === 'object') {
-      // 最初のキーを取得
+   
       const firstKey = Object.keys(lookupData)[0];
       if (firstKey && lookupData[firstKey]) {
         userName = lookupData[firstKey].displayName || '不明';
@@ -462,23 +460,23 @@ window.addEventListener('load', () => {
 });
 
 
-const NEWS_TAGS = {
-  "BR": "Product.BR",
-  "Juno": "Product.Juno",
-  "BlastBerry": "Product.BlastBerry",
-  "BR.Habanero": "Product.BR.Habanero",
-  "BR.NoBuild": "Product.BR.NoBuild",
-  "Figment": "Product.Figment",
-  "Sparks": "Product.Sparks",
-  "STW": "Product.STW"
-};
+const NEWS_TAGS = [
+  "Product.BR", 
+  "Product.Juno", 
+  "Product.BlastBerry",
+  "Product.BR.Habanero", 
+  "Product.BR.NoBuild", 
+  "Product.Figment",
+  "Product.Sparks", 
+  "Product.STW"
+];
 
 
 function setupNewsDropdown() {
   const select = document.getElementById('news-tag-select');
   if (!select) return;
-  select.innerHTML = Object.keys(NEWS_TAGS)
-    .map(key => `<option value="${NEWS_TAGS[key]}">${key}</option>`)
+  select.innerHTML = NEWS_TAGS
+    .map(tag => `<option value="${tag}">${tag}</option>`)
     .join('');
 }
 
@@ -491,8 +489,10 @@ async function fetchNewsByTag(tag) {
     if (!res.ok) throw new Error('取得失敗');
     const data = await res.json();
     const items = data?.data?.contentItems || [];
-    if (!items.length) return dom.innerHTML = '<div class="error">現在ニュースはありません。</div>';
-
+    if (!items.length) {
+      dom.innerHTML = '<div class="error">現在ニュースはありません。</div>';
+      return;
+    }
     dom.innerHTML = `<div class="card-list">
       ${items.map(msg => {
         const f = msg.contentFields || {};
@@ -511,16 +511,12 @@ async function fetchNewsByTag(tag) {
   }
 }
 
-// 
-document.getElementById('news-search-btn').addEventListener('click', async () => {
-  const select = document.getElementById('news-tag-select');
-  const tag = select.value;
-  const isHuman = await checkHuman();
-  if (!isHuman) {
-    document.getElementById('news-content').innerHTML = '<div class="error">人間認証に失敗しました。</div>';
-    return;
-  }
-  fetchNewsByTag(tag);
-});
 
-window.addEventListener('DOMContentLoaded', setupNewsDropdown);
+window.addEventListener('DOMContentLoaded', () => {
+  setupNewsDropdown();
+  document.getElementById('news-search-btn').addEventListener('click', () => {
+    const select = document.getElementById('news-tag-select');
+    const tag = select.value;
+    fetchNewsByTag(tag);
+  });
+});
