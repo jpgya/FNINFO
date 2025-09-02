@@ -1,6 +1,10 @@
 const BASE_URL = 'https://fljpapi.jp/api/v2';
 const BASE_URL_NOT_V2 = 'https://fljpapi.jp/api';
 //const apitoken =env.token;
+//const { token } = require('./token');
+//import {token} from ("./token.js")
+//console.log(token);
+
 
 function toJpDate(str) {
   if (!str) return '不明';
@@ -142,8 +146,7 @@ async function fetchHotfix() {
   
 
 }
-
-
+/*
 
 function toJpDate(isoStr) {
   if (!isoStr) return '不明';
@@ -152,7 +155,7 @@ function toJpDate(isoStr) {
   d.setHours(d.getHours() + 9);
   return `${d.getFullYear()}年${(d.getMonth()+1).toString().padStart(2,'0')}月${d.getDate().toString().padStart(2,'0')}日 ${d.getHours().toString().padStart(2,'0')}時${d.getMinutes().toString().padStart(2,'0')}分`;
 }
-
+*/
 function escapeHtml(input) {
   if (input === null || input === undefined) return '';
   const str = String(input);
@@ -164,7 +167,7 @@ function escapeHtml(input) {
     "'": '&#39;'
   })[m]);
 }
-
+/*
 function toJpDate(isoString) {
   if (!isoString) return '不明';
   try {
@@ -177,7 +180,7 @@ function toJpDate(isoString) {
 }
 
 
-
+*/
 
 async function fetchTournaments() {
   const dom = document.getElementById('tournaments');
@@ -409,7 +412,7 @@ document.getElementById('user-form').addEventListener('submit', e => {
 });
 
 window.addEventListener('load', () => {
-  fetchNews();
+  fetchNewsByTag();
   fetchTimeline();
   fetchBuilds();
   fetchStatus();
