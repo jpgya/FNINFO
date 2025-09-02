@@ -17,7 +17,7 @@ function formatEventTypeJa(type) {
   return s;
 }
 
-// ニュース取得（全モード）
+/*
 async function fetchNews() {
   const dom = document.getElementById('news');
   dom.innerHTML = '<div class="loader"></div>';
@@ -56,6 +56,7 @@ async function fetchNews() {
     dom.innerHTML = `<div class="error">取得失敗: ${err.message}</div>`;
   }
 }
+  */
 
 async function fetchTimeline() {
   const dom = document.getElementById('timeline');
@@ -461,7 +462,65 @@ window.addEventListener('load', () => {
 });
 
 
+const NEWS_TAGS = {
+  "BR": "Product.BR",
+  "Juno": "Product.Juno",
+  "BlastBerry": "Product.BlastBerry",
+  "BR.Habanero": "Product.BR.Habanero",
+  "BR.NoBuild": "Product.BR.NoBuild",
+  "Figment": "Product.Figment",
+  "Sparks": "Product.Sparks",
+  "STW": "Product.STW"
+};
 
 
+function setupNewsDropdown() {
+  const select = document.getElementById('news-tag-select');
+  if (!select) return;
+  select.innerHTML = Object.keys(NEWS_TAGS)
+    .map(key => `<option value="${NEWS_TAGS[key]}">${key}</option>`)
+    .join('');
+}
 
 
+async function fetchNewsByTag(tag) {
+  const dom = document.getElementById('news-content');
+  dom.innerHTML = '<div class="loader"></div>';
+  try {
+    const res = await fetch(`${BASE_URL}/news?platform=Windows&language=ja&serverRegion=ASIA&country=JP&tags=${tag}`);
+    if (!res.ok) throw new Error('取得失敗');
+    const data = await res.json();
+    const items = data?.data?.contentItems || [];
+    if (!items.length) return dom.innerHTML = '<div class="error">現在ニュースはありません。</div>';
+
+    dom.innerHTML = `<div class="card-list">
+      ${items.map(msg => {
+        const f = msg.contentFields || {};
+        let html = `<ul class="info-list">`;
+        if (f.FullScreenTitle) html += `<li><strong>タイトル:</strong> ${f.FullScreenTitle}</li>`;
+        if (f.FullScreenBody) html += `<li>${f.FullScreenBody}</li>`;
+        if (f.TeaserTitle && f.TeaserTitle !== "​") html += `<li><strong>サブタイトル:</strong> ${f.TeaserTitle}</li>`;
+        if (Array.isArray(f.FullScreenBackground?.Image))
+          html += `<li><img src="${f.FullScreenBackground.Image[0].url}" style="max-width:100%;border-radius:0.5em;"></li>`;
+        html += `</ul>`;
+        return `<div class="card">${html}</div>`;
+      }).join('')}
+    </div>`;
+  } catch (err) {
+    dom.innerHTML = `<div class="error">取得失敗: ${err.message}</div>`;
+  }
+}
+
+// 
+document.getElementById('news-search-btn').addEventListener('click', async () => {
+  const select = document.getElementById('news-tag-select');
+  const tag = select.value;
+  const isHuman = await checkHuman();
+  if (!isHuman) {
+    document.getElementById('news-content').innerHTML = '<div class="error">人間認証に失敗しました。</div>';
+    return;
+  }
+  fetchNewsByTag(tag);
+});
+
+window.addEventListener('DOMContentLoaded', setupNewsDropdown);
