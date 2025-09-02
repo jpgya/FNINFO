@@ -32,7 +32,7 @@ jobs:
 
       - name: Generate config file
         run: |
-          # トークンをconfig.jsに埋め込む（非推奨）
+          
           echo "window.env = { TOKEN: '$MY_TOKEN' };" > ./config.js
 
       - name: Upload artifact
