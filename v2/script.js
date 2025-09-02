@@ -1,5 +1,6 @@
 const BASE_URL = 'https://fljpapi.jp/api/v2';
 const BASE_URL_NOT_V2 = 'https://fljpapi.jp/api';
+const apitoken =env.token;
 
 function toJpDate(str) {
   if (!str) return '不明';
