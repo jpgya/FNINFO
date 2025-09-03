@@ -1,0 +1,3 @@
+@media (prefers-reduced-motion: reduce) {
+    .telop__content { animation: none; padding-left: 0; }
+}

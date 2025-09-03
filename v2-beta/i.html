@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <link rel="icon" href="../Aseetdata/log.png">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <title>フォートナイト情報ツール FNINFO (FLJP API v2)</title>
+    <meta name="description" content="フォートナイトのイベント・ニュース・ビルド・ユーザー検索ができる便利ツール">
+    <script defer src="./js/0001.js"></script>
+    <script defer src="./js/0002.js"></script>
+    <script type="module" src="./script.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/crypto-js@4.1.1/crypto-js.min.js"></script>
+    <meta name="theme-color" content="#000000">
+    <link rel="apple-touch-icon" href="../Aseetdata/log.png">
+    <link rel="stylesheet" href="./css/0001.css">
+    <link rel="stylesheet" href="./css/0002.css">
+    <link rel="stylesheet" href="./css/0003.css">
+    <link rel="stylesheet" href="./css/0004.css">
+    <link rel="stylesheet" href="./css/0005.css">
+    <link rel="stylesheet" href="./css/0006.css">
+    <link rel="stylesheet" href="./css/0007.css">
+    <link rel="stylesheet" href="./css/0008.css">
+    <link rel="stylesheet" href="./css/0009.css">
+    <link rel="stylesheet" href="./css/styles.css">
+  </head>
+  <body>
+    <header>
+    フォートナイト情報ツール
+    </header>
+    <nav class="tabs">
+      <button class="tab active" data-tab="news">ニュース</button>
+      <button class="tab" data-tab="timeline">イベントスケジュール</button>
+      <button class="tab" data-tab="build">ビルド情報</button>
+      <button class="tab" data-tab="tournaments">トーナメント一覧</button>
+      <button class="tab" data-tab="playlists">プレイリスト情報</button>
+      <button class="tab" data-tab="status">ステータス情報</button>
+      <button class="tab" data-tab="hotfix">ホットフィックス</button>
+      <button class="tab" data-tab="user-search">ユーザー検索</button>
+      <button class="tab" data-tab="this-page-info">このサイトについて</button>
+    </nav>
+    <main>
+      <section id="news" class="tab-content active">
+        <h2>最新ニュース（全モード）</h2>
+        <div class="caption">公式ニュースすべてを統合表示</div>
+        <div style="margin-bottom:1em;">
+          <label for="news-tag-select">ニュースタグ選択：</label>
+          <select id="news-tag-select"></select>
+          <button id="news-search-btn">検索する</button>
+        </div>
+        <div id="news-content"></div>
+      </section>
+
+      <section id="timeline" class="tab-content">
+        <h2>イベントスケジュール</h2>
+        <div class="caption">現在・今後のゲーム内イベント一覧</div>
+        <div id="timeline-content"><div class="loader"></div></div>
+      </section>
+
+      <section id="build" class="tab-content">
+        <h2>ビルド情報（全プラットフォーム）</h2>
+        <div class="caption">APIで対応しているプラットフォームすべての最新ビルド</div>
+        <div id="build-content"><div class="loader"></div></div>
+      </section>
+
+      <section id="tournaments" class="tab-content">
+        <h2>トーナメント一覧</h2>
+        <div class="caption">最新の大会・報酬情報</div>
+        <div id="tournaments-content"><div class="loader"></div></div>
+      </section>
+
+      <section id="playlists" class="tab-content">
+        <h2>プレイリスト情報</h2>
+        <div class="caption">バトルロワイヤルのプレイリスト一覧</div>
+        <div id="playlists-content"><div class="loader"></div></div>
+      </section>
+
+      <section id="status" class="tab-content">
+        <h2>ステータス情報</h2>
+        <div class="caption">フォートナイトのサーバー・メンテナンス状態</div>
+        <div id="status-content"><div class="loader"></div></div>
+      </section>
+      <section id="hotfix" class="tab-content">
+        <h2>ホットフィックス一覧</h2>
+        <div class="caption">Epicが配信しているクライアントホットフィックスファイル</div>
+        <div id="hotfix-content"><div class="loader"></div></div>
+      </section>
+
+      <section id="user-search" class="tab-content">
+        <h2>ユーザー検索（EpicアカウントID）</h2>
+        <div class="caption">EpicアカウントIDからユーザー名・ランク等を調べられます</div>
+        <form id="user-form" autocomplete="off">
+          <div class="input-group">
+            <input type="text" id="epic-name" placeholder="EpicアカウントIDを入力（ユーザー名不可）" required>
+            <button type="submit">検索</button>
+          </div>
+        </form>
+        <div id="user-result"></div>
+      </section>  
+      <section id="this-page-info" class="tab-content">
+        <h2>このサイトについて</h2>
+        <div style="font-size:1em;color:#ffb3b3;">
+          <div style="font-size:1em;color:#ffb3b3;"><strong>2025-08-08記載：</strong> 本サイトおよび本サービスは、Epic Games, Inc. またはその関連会社が提供・運営するものではありません。
+          本サイトは非公式のファン制作によるものであり、Epic Games, Inc. とは一切の提携・関係はありません。
+"Fortnite" およびその関連名称・商標は Epic Games, Inc. の財産です。</div>
+
+          <div style="font-size:1em;color:#ffb3b3;">This site and its services are not provided, operated, or endorsed by Epic Games, Inc. or its affiliates.
+This is an unofficial, fan-made project and has no affiliation with Epic Games, Inc.
+"Fortnite" and all related names and trademarks are the property of Epic Games, Inc.</div>
+        </div>
+    </section>    
+    </main>
+    <div class="telop" role="region" aria-label="サイトからのお知らせ" id="site-telop">
+    <div class="telop__wrap" aria-hidden="false">
+      <div class="telop__content" id="telop-text">
+      FNINFO v2は不安定なため、使用できない機能があります。
+      </div>
+    </div>
+      <button class="telop__close" id="telop-close" aria-label="テロップを閉じる">×</button>
+    </div>
+  </body>
+</html>

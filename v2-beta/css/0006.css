@@ -1,0 +1,4 @@
+@media (max-width: 480px) {
+    .telop { height: 44px; padding-right: 48px; }
+    .telop__content { font-size: 14px; animation-duration: 12s; }
+  }
