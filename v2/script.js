@@ -4,6 +4,7 @@ const BASE_URL_NOT_V2 = 'https://fljpapi.jp/api';
 //const { token } = require('./token');
 //import {token} from ("./token.js")
 //console.log(token);
+//import { check } from './captcha.js'
 
 
 function toJpDate(str) {
@@ -446,9 +447,10 @@ function setupNewsDropdown() {
 async function fetchNewsByTag(tag) {
   const dom = document.getElementById('news-content');
   dom.innerHTML = '<div class="loader"></div>';
+  //document.getElementById('news-tag-select').appendChild(captcha.Block); //Meroキャプチャ側に問題が発生したので無効化。最悪reCAHPCAでもいい
   try {
     const res = await fetch(`${BASE_URL}/news?platform=Windows&language=ja&serverRegion=ASIA&country=JP&tags=${tag}`);
-    if (!res.ok) throw new Error('取得失敗');
+    if (!res.ok) throw new Error('');
     const data = await res.json();
     const items = data?.data?.contentItems || [];
     if (!items.length) {
@@ -469,7 +471,7 @@ async function fetchNewsByTag(tag) {
       }).join('')}
     </div>`;
   } catch (err) {
-    dom.innerHTML = `<div class="error">取得失敗: ${err.message}</div>`;
+    dom.innerHTML = `<div class="error"> ${err.message}</div>`;
   }
 }
 
