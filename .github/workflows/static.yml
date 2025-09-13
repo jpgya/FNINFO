@@ -21,7 +21,7 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     env:
-      MY_TOKEN: ${{ secrets.MY_TOKEN }}  # シークレットからトークンを取得
+      MY_TOKEN: ${{ secrets.MY_TOKEN }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -42,12 +42,13 @@ jobs:
             .git/**
             .github/**
 
-      - name: Generate diff and changed files
+      - name: Generate diff and changed files (Bash only)
         id: gen
         run: |
           set -e
           BEFORE="${{ github.event.before }}"
           AFTER="${{ github.event.after }}"
+          
           if [ "$BEFORE" = "0000000000000000000000000000000000000000" ]; then
             git show --pretty=format:"" --unified=0 "$AFTER" > diff.txt || true
             git show --pretty=format:"" --name-only "$AFTER" | sort -u > files.txt || true
@@ -57,59 +58,50 @@ jobs:
           fi
 
           MAX=3800
-          python - "$MAX" <<'PY'
-import sys
-maxc = int(sys.argv[1])
-with open('diff.txt', 'r', encoding='utf-8', errors='replace') as f:
-    txt = f.read()
-if len(txt) > maxc:
-    prefix = txt[:maxc//2]
-    suffix = txt[-(maxc//2):]
-    txt = prefix + "\n\n... (truncated) ...\n\n" + suffix
-out = "```diff\n" + txt + "\n```"
-with open('diff_block.txt', 'w', encoding='utf-8') as f:
-    f.write(out)
-with open('files.txt', 'r', encoding='utf-8', errors='replace') as f:
-    files = f.read().strip()
-with open('files_block.txt', 'w', encoding='utf-8') as f:
-    f.write(files)
-PY
-          echo "diff_file=diff_block.txt" >> $GITHUB_OUTPUT
-          echo "files_file=files_block.txt" >> $GITHUB_OUTPUT
+          # 文字数制限でトリミング
+          DIFF=$(head -c $((MAX/2)) diff.txt; echo; echo "... (truncated) ..."; echo; tail -c $((MAX/2)) diff.txt)
+          echo "diff_block=\`\`\`diff\n$DIFF\n\`\`\`" >> $GITHUB_ENV
+          
+          FILES=$(cat files.txt)
+          echo "files_block=$FILES" >> $GITHUB_ENV
 
-      - name: Send Discord Embed with diff
+      - name: Send Discord Embed with diff (Bash only)
         env:
           WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
           REPO: ${{ github.repository }}
           COMPARE_URL: ${{ github.server_url }}/${{ github.repository }}/compare/${{ github.event.before }}...${{ github.event.after }}
         run: |
-          python - <<'PY'
-import json, os
-repo = os.environ['REPO']
-compare = os.environ['COMPARE_URL']
-with open('diff_block.txt','r',encoding='utf-8',errors='replace') as f:
-    diff = f.read()
-with open('files_block.txt','r',encoding='utf-8',errors='replace') as f:
-    files = f.read().strip()
-if not files:
-    files = "No changed files detected."
-embed = {
-    "title": "📢 Push detected",
-    "description": diff if diff else "```diff\n(no diff)\n```",
-    "color": 5814783,
-    "fields": [
-        {"name": "Repository", "value": repo, "inline": True},
-        {"name": "Compare", "value": compare, "inline": False},
-        {"name": "Changed files", "value": files if len(files)<=1024 else files[:1000] + "\n… (truncated)", "inline": False}
-    ],
-    "footer": {"text": "GitHub Actions - Push Event"}
-}
-payload = {"username":"GitHub Actions","embeds":[embed]}
-with open('payload.json','w',encoding='utf-8') as f:
-    json.dump(payload,f)
-PY
-          curl -H "Content-Type: application/json" -X POST -d @payload.json "$WEBHOOK"
+          DIFF="${{ env.diff_block }}"
+          FILES="${{ env.files_block }}"
+          [ -z "$FILES" ] && FILES="No changed files detected."
+          
+          PAYLOAD=$(jq -n \
+            --arg title "📢 Push detected" \
+            --arg description "$DIFF" \
+            --arg repo "$REPO" \
+            --arg compare "$COMPARE_URL" \
+            --arg files "$FILES" \
+            '{
+              username: "GitHub Actions",
+              embeds: [
+                {
+                  title: $title,
+                  description: $description,
+                  color: 5814783,
+                  fields: [
+                    {name: "Repository", value: $repo, inline: true},
+                    {name: "Compare", value: $compare, inline: false},
+                    {name: "Changed files", value: (if ($files|length)<=1024) then $files else ($files[0:1000]+"… (truncated)") end, inline: false}
+                  ],
+                  footer: {text: "GitHub Actions - Push Event"}
+                }
+              ]
+            }'
+          )
+          
+          curl -H "Content-Type: application/json" -X POST -d "$PAYLOAD" "$WEBHOOK"
 
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+
