@@ -44,6 +44,16 @@ jobs:
             .git/**
             .github/**
 
+      - name: Send Discord Notification
+        run: |
+          curl -H "Content-Type: application/json" \
+               -X POST \
+               -d "{
+                     \"username\": \"GitHub Actions\",
+                     \"content\": \"📢 **Push detected!**\n\nリポジトリ: $GITHUB_REPOSITORY\nブランチ: $GITHUB_REF_NAME\nコミット: $GITHUB_SHA\nメッセージ: $(echo '${{ github.event.head_commit.message }}' | sed 's/\"/\\\"/g')\nユーザー: $GITHUB_ACTOR\"
+                   }" \
+               ${{ secrets.DISCORD_WEBHOOK }}
+
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
