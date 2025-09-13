@@ -1,4 +1,3 @@
-# 修正されたワークフロー
 name: Deploy static content to Pages
 
 on:
@@ -32,7 +31,6 @@ jobs:
 
       - name: Generate config file
         run: |
-          
           echo "window.env = { TOKEN: '$MY_TOKEN' };" > ./config.js
 
       - name: Upload artifact
@@ -96,15 +94,15 @@ with open('files_block.txt','r',encoding='utf-8',errors='replace') as f:
 if not files:
     files = "No changed files detected."
 embed = {
-  "title": "📢 Push detected",
-  "description": diff if diff else "```diff\n(no diff)\n```",
-  "color": 5814783,
-  "fields": [
-    {"name": "Repository", "value": repo, "inline": True},
-    {"name": "Compare", "value": compare, "inline": False},
-    {"name": "Changed files", "value": files if len(files)<=1024 else files[:1000] + "\n… (truncated)", "inline": False}
-  ],
-  "footer": {"text": "GitHub Actions - Push Event"}
+    "title": "📢 Push detected",
+    "description": diff if diff else "```diff\n(no diff)\n```",
+    "color": 5814783,
+    "fields": [
+        {"name": "Repository", "value": repo, "inline": True},
+        {"name": "Compare", "value": compare, "inline": False},
+        {"name": "Changed files", "value": files if len(files)<=1024 else files[:1000] + "\n… (truncated)", "inline": False}
+    ],
+    "footer": {"text": "GitHub Actions - Push Event"}
 }
 payload = {"username":"GitHub Actions","embeds":[embed]}
 with open('payload.json','w',encoding='utf-8') as f:
