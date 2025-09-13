@@ -3,84 +3,48 @@ name: Deploy static content to Pages
 on:
   push:
     branches: ["main"]
-  workflow_dispatch:
-
-permissions:
-  contents: read
-  pages: write
-  id-token: write
-
-concurrency:
-  group: "pages"
-  cancel-in-progress: false
 
 jobs:
   deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
-    env:
-      MY_TOKEN: ${{ secrets.MY_TOKEN }}
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Setup Pages
-        uses: actions/configure-pages@v5
-
-      - name: Generate config file
+      - name: Generate diff and changed files
         run: |
-          echo "window.env = { TOKEN: '$MY_TOKEN' };" > ./config.js
-
-      - name: Clean excluded files before artifact
-        run: |
-          rm -rf node_modules .git .github || true
-
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: '.'
-
-      - name: Generate diff and changed files (Bash only)
-        id: gen
-        run: |
-          set -e
           BEFORE="${{ github.event.before }}"
           AFTER="${{ github.event.after }}"
 
           if [ "$BEFORE" = "0000000000000000000000000000000000000000" ]; then
-            git show --pretty=format:"" --unified=0 "$AFTER" > diff.txt || true
-            git show --pretty=format:"" --name-only "$AFTER" | sort -u > files.txt || true
+            DIFF=$(git show --pretty=format:"" --unified=0 "$AFTER" || true)
+            FILES=$(git show --pretty=format:"" --name-only "$AFTER" | sort -u || true)
           else
-            git diff --no-color --unified=0 "$BEFORE" "$AFTER" > diff.txt || true
-            git diff --name-only "$BEFORE" "$AFTER" | sort -u > files.txt || true
+            DIFF=$(git diff --no-color --unified=0 "$BEFORE" "$AFTER" || true)
+            FILES=$(git diff --name-only "$BEFORE" "$AFTER" | sort -u || true)
           fi
 
+          # 文字数制限
           MAX=3800
-          DIFF=$(head -c $((MAX/2)) diff.txt; echo; echo "... (truncated) ..."; echo; tail -c $((MAX/2)) diff.txt)
+          DIFF="${DIFF:0:MAX}"
 
-          # 安全に GITHUB_ENV に書き込む
-          echo 'diff_block=```diff
-'"$DIFF"'
-```' >> $GITHUB_ENV
-
-          FILES=$(cat files.txt)
+          # 空ならメッセージ
           [ -z "$FILES" ] && FILES="No changed files detected."
-          echo "files_block=$FILES" >> $GITHUB_ENV
 
-      - name: Send Discord Embed with diff (Bash only)
+          echo "$DIFF" > diff.txt
+          echo "$FILES" > files.txt
+
+      - name: Send Discord Embed
         env:
           WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
           REPO: ${{ github.repository }}
           COMPARE_URL: ${{ github.server_url }}/${{ github.repository }}/compare/${{ github.event.before }}...${{ github.event.after }}
         run: |
-          DIFF="${{ env.diff_block }}"
-          FILES="${{ env.files_block }}"
+          DIFF=$(cat diff.txt)
+          FILES=$(cat files.txt)
 
           PAYLOAD=$(jq -n \
             --arg title "📢 Push detected" \
-            --arg description "$DIFF" \
+            --arg description "```diff\n$DIFF\n```" \
             --arg repo "$REPO" \
             --arg compare "$COMPARE_URL" \
             --arg files "$FILES" \
@@ -94,7 +58,7 @@ jobs:
                   fields: [
                     {name: "Repository", value: $repo, inline: true},
                     {name: "Compare", value: $compare, inline: false},
-                    {name: "Changed files", value: (if ($files|length)<=1024) then $files else ($files[0:1000]+"… (truncated)") end, inline: false}
+                    {name: "Changed files", value: (if ($files|length<=1024) then $files else ($files[0:1000]+"… (truncated)") end), inline: false}
                   ],
                   footer: {text: "GitHub Actions - Push Event"}
                 }
@@ -103,7 +67,3 @@ jobs:
           )
 
           curl -H "Content-Type: application/json" -X POST -d "$PAYLOAD" "$WEBHOOK"
-
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
