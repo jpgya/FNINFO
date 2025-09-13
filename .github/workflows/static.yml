@@ -3,14 +3,43 @@ name: Deploy static content to Pages
 on:
   push:
     branches: ["main"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Generate config file
+        env:
+          MY_TOKEN: ${{ secrets.MY_TOKEN }}
+        run: |
+          echo "window.env = { TOKEN: '$MY_TOKEN' };" > ./config.js
+
+      - name: Clean unwanted files
+        run: |
+          rm -rf node_modules .git .github || true
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: '.'
 
       - name: Generate diff and changed files
+        id: gen
         run: |
           BEFORE="${{ github.event.before }}"
           AFTER="${{ github.event.after }}"
@@ -23,11 +52,8 @@ jobs:
             FILES=$(git diff --name-only "$BEFORE" "$AFTER" | sort -u || true)
           fi
 
-          # 文字数制限
           MAX=3800
           DIFF="${DIFF:0:MAX}"
-
-          # 空ならメッセージ
           [ -z "$FILES" ] && FILES="No changed files detected."
 
           echo "$DIFF" > diff.txt
@@ -67,3 +93,7 @@ jobs:
           )
 
           curl -H "Content-Type: application/json" -X POST -d "$PAYLOAD" "$WEBHOOK"
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
