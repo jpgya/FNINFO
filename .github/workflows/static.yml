@@ -44,15 +44,73 @@ jobs:
             .git/**
             .github/**
 
-      - name: Send Discord Notification
+      - name: Generate diff and changed files
+        id: gen
         run: |
-          curl -H "Content-Type: application/json" \
-               -X POST \
-               -d "{
-                     \"username\": \"GitHub Actions\",
-                     \"content\": \"📢 **Push detected!**\n\nリポジトリ: $GITHUB_REPOSITORY\nブランチ: $GITHUB_REF_NAME\nコミット: $GITHUB_SHA\nメッセージ: $(echo '${{ github.event.head_commit.message }}' | sed 's/\"/\\\"/g')\nユーザー: $GITHUB_ACTOR\"
-                   }" \
-               ${{ secrets.DISCORD_WEBHOOK }}
+          set -e
+          BEFORE="${{ github.event.before }}"
+          AFTER="${{ github.event.after }}"
+          if [ "$BEFORE" = "0000000000000000000000000000000000000000" ]; then
+            git show --pretty=format:"" --unified=0 "$AFTER" > diff.txt || true
+            git show --pretty=format:"" --name-only "$AFTER" | sort -u > files.txt || true
+          else
+            git diff --no-color --unified=0 "$BEFORE" "$AFTER" > diff.txt || true
+            git diff --name-only "$BEFORE" "$AFTER" | sort -u > files.txt || true
+          fi
+
+          MAX=3800
+          python - "$MAX" <<'PY'
+import sys
+maxc = int(sys.argv[1])
+with open('diff.txt', 'r', encoding='utf-8', errors='replace') as f:
+    txt = f.read()
+if len(txt) > maxc:
+    prefix = txt[:maxc//2]
+    suffix = txt[-(maxc//2):]
+    txt = prefix + "\n\n... (truncated) ...\n\n" + suffix
+out = "```diff\n" + txt + "\n```"
+with open('diff_block.txt', 'w', encoding='utf-8') as f:
+    f.write(out)
+with open('files.txt', 'r', encoding='utf-8', errors='replace') as f:
+    files = f.read().strip()
+with open('files_block.txt', 'w', encoding='utf-8') as f:
+    f.write(files)
+PY
+          echo "diff_file=diff_block.txt" >> $GITHUB_OUTPUT
+          echo "files_file=files_block.txt" >> $GITHUB_OUTPUT
+
+      - name: Send Discord Embed with diff
+        env:
+          WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+          REPO: ${{ github.repository }}
+          COMPARE_URL: ${{ github.server_url }}/${{ github.repository }}/compare/${{ github.event.before }}...${{ github.event.after }}
+        run: |
+          python - <<'PY'
+import json, os
+repo = os.environ['REPO']
+compare = os.environ['COMPARE_URL']
+with open('diff_block.txt','r',encoding='utf-8',errors='replace') as f:
+    diff = f.read()
+with open('files_block.txt','r',encoding='utf-8',errors='replace') as f:
+    files = f.read().strip()
+if not files:
+    files = "No changed files detected."
+embed = {
+  "title": "📢 Push detected",
+  "description": diff if diff else "```diff\n(no diff)\n```",
+  "color": 5814783,
+  "fields": [
+    {"name": "Repository", "value": repo, "inline": True},
+    {"name": "Compare", "value": compare, "inline": False},
+    {"name": "Changed files", "value": files if len(files)<=1024 else files[:1000] + "\n… (truncated)", "inline": False}
+  ],
+  "footer": {"text": "GitHub Actions - Push Event"}
+}
+payload = {"username":"GitHub Actions","embeds":[embed]}
+with open('payload.json','w',encoding='utf-8') as f:
+    json.dump(payload,f)
+PY
+          curl -H "Content-Type: application/json" -X POST -d @payload.json "$WEBHOOK"
 
       - name: Deploy to GitHub Pages
         id: deployment
