@@ -1,11 +1,13 @@
-const BASE_URL = 'https://fljpapi.vigyanfv.workers.dev/';
+// BASE_URLを廃止し、直接URLを使用するように修正
+
+//const BASE_URL = 'https://fljpapi.vigyanfv.workers.dev/';
+const BASE_URL_NOT_V2 = 'https://fljpapi.jp/api/v2';
 
 //const apitoken =env.token;
 //const { token } = require('./token');
 //import {token} from ("./token.js")
 //console.log(token);
 //import { check } from './captcha.js'
-
 
 function toJpDate(str) {
   if (!str) return '不明';
@@ -26,7 +28,7 @@ async function fetchTimeline() {
   const dom = document.getElementById('timeline');
   dom.innerHTML = '<div class="loader"></div>';
   try {
-    const res = await fetch(`${BASE_URL}/timeline`);
+    const res = await fetch(`https://fljpapi.vigyanfv.workers.dev/timeline`);
     const raw = await res.json();
     const data = raw.data;
     let events = [];
@@ -65,7 +67,7 @@ async function fetchBuilds() {
   const dom = document.getElementById('build');
   dom.innerHTML = '<div class="loader"></div>';
   try {
-    const res = await fetch(`${BASE_URL}/build`);
+    const res = await fetch(`https://fljpapi.vigyanfv.workers.dev/build`);
     const builds = await res.json();
     const html = Object.entries(builds).map(([plat, info]) => {
       const li = [`<span class="platform-badge">${plat}</span><br><ul class="info-list">`];
@@ -85,7 +87,7 @@ async function fetchStatus() {
   const dom = document.getElementById('status');
   dom.innerHTML = '<div class="loader"></div>';
   try {
-    const res = await fetch(`${BASE_URL}/fortnitestatus`);
+    const res = await fetch(`https://fljpapi.vigyanfv.workers.dev/fortnitestatus`);
     const data = await res.json();
 
     const fn = data.fnstatus;
@@ -108,7 +110,6 @@ async function fetchStatus() {
     dom.innerHTML = `<div class="error">ステータス取得失敗: ${err.message}</div>`;
   }
 }
-
 
 async function fetchHotfix() {
   const dom = document.getElementById('hotfix');
@@ -139,24 +140,9 @@ async function fetchHotfix() {
     dom.innerHTML = `<div class="card-list">${html}</div>`;
   } catch (err) {
     dom.innerHTML = `<div class="error">取得失敗: ${err.message}</div>`;
-
-
   }
-
-
-  
-
 }
-/*
 
-function toJpDate(isoStr) {
-  if (!isoStr) return '不明';
-  const d = new Date(isoStr);
- 
-  d.setHours(d.getHours() + 9);
-  return `${d.getFullYear()}年${(d.getMonth()+1).toString().padStart(2,'0')}月${d.getDate().toString().padStart(2,'0')}日 ${d.getHours().toString().padStart(2,'0')}時${d.getMinutes().toString().padStart(2,'0')}分`;
-}
-*/
 function escapeHtml(input) {
   if (input === null || input === undefined) return '';
   const str = String(input);
@@ -168,20 +154,6 @@ function escapeHtml(input) {
     "'": '&#39;'
   })[m]);
 }
-/*
-function toJpDate(isoString) {
-  if (!isoString) return '不明';
-  try {
-    const date = new Date(isoString);
-    if (isNaN(date)) return '不明';
-    return date.toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo' });
-  } catch {
-    return '不明';
-  }
-}
-
-
-*/
 
 async function fetchTournaments() {
   const dom = document.getElementById('tournaments');
@@ -200,7 +172,6 @@ async function fetchTournaments() {
 
     const data = await res.json();
 
-
     let events = [];
     if (Array.isArray(data.events)) events = data.events;
     else if (Array.isArray(data.data?.events)) events = data.data.events;
@@ -214,7 +185,6 @@ async function fetchTournaments() {
       dom.innerHTML = '<div class="error">トーナメント情報はありません。</div>';
       return;
     }
-
 
     const html = events.map((e, idx) => {
       const title = escapeHtml(e.eventGroup || e.displayDataId || e.eventId || 'イベント名不明');
@@ -304,12 +274,7 @@ async function fetchTournaments() {
   }
 }
 
-
 document.addEventListener('DOMContentLoaded', fetchTournaments);
-
-
-
-
 
 async function fetchPlaylists() {
   const dom = document.getElementById('playlists');
@@ -360,16 +325,13 @@ async function fetchUserInfo(accountId) {
   dom.innerHTML = '<div class="loader"></div>';
 
   try {
- 
-    const lookupRes = await fetch(`${BASE_URL}/lookup?accountid=${accountId}`);
+    const lookupRes = await fetch(`https://fljpapi.vigyanfv.workers.dev/lookup?accountid=${accountId}`);
     if (!lookupRes.ok) throw new Error(`HTTPエラー: ${lookupRes.status}`);
     const lookupData = await lookupRes.json();
 
- 
     let userName = '不明';
     let userId = accountId;
     if (lookupData && typeof lookupData === 'object') {
-   
       const firstKey = Object.keys(lookupData)[0];
       if (firstKey && lookupData[firstKey]) {
         userName = lookupData[firstKey].displayName || '不明';
@@ -378,7 +340,7 @@ async function fetchUserInfo(accountId) {
     }
 
     // ランク取得
-    const rankRes = await fetch(`${BASE_URL}/rank/${userId}`);
+    const rankRes = await fetch(`https://fljpapi.vigyanfv.workers.dev/rank/${userId}`);
     if (!rankRes.ok) throw new Error(`HTTPエラー: ${rankRes.status}`);
     const rankData = await rankRes.json();
 
@@ -422,7 +384,6 @@ window.addEventListener('load', () => {
   fetchPlaylists();
 });
 
-
 const NEWS_TAGS = [
   "Product.BR", 
   "Product.Juno", 
@@ -434,7 +395,6 @@ const NEWS_TAGS = [
   "Product.STW"
 ];
 
-
 function setupNewsDropdown() {
   const select = document.getElementById('news-tag-select');
   if (!select) return;
@@ -443,13 +403,11 @@ function setupNewsDropdown() {
     .join('');
 }
 
-
 async function fetchNewsByTag(tag) {
   const dom = document.getElementById('news-content');
   dom.innerHTML = '<div class="loader"></div>';
-  //document.getElementById('news-tag-select').appendChild(captcha.Block); //Meroキャプチャ側に問題が発生したので無効化。最悪reCAHPCAでもいい
   try {
-    const res = await fetch(`${BASE_URL}/news?platform=Windows&language=ja&serverRegion=ASIA&country=JP&tags=${tag}`);
+    const res = await fetch(`https://fljpapi.vigyanfv.workers.dev/news?platform=Windows&language=ja&serverRegion=ASIA&country=JP&tags=${tag}`);
     if (!res.ok) throw new Error('');
     const data = await res.json();
     const items = data?.data?.contentItems || [];
@@ -474,7 +432,6 @@ async function fetchNewsByTag(tag) {
     dom.innerHTML = `<div class="error"> ${err.message}</div>`;
   }
 }
-
 
 window.addEventListener('DOMContentLoaded', () => {
   setupNewsDropdown();
