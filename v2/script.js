@@ -1,5 +1,5 @@
-const BASE_URL = 'https://fljpapi.jp/api/v2';
-const BASE_URL_NOT_V2 = 'https://fljpapi.jp/api';
+const BASE_URL = 'https://fljpapi.vigyanfv.workers.dev/';
+
 //const apitoken =env.token;
 //const { token } = require('./token');
 //import {token} from ("./token.js")
