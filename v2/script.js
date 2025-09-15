@@ -4,6 +4,12 @@
 const BASE_URL_NOT_V2 = 'https://fljpapi.jp/api/v2';
 
 //const apitoken =env.token;
+// URLの二重スラッシュを防ぐため、URL結合時にスラッシュを調整する関数
+function joinUrl(base, path) {
+  if (!base.endsWith('/')) base += '/';
+  if (path.startsWith('/')) path = path.slice(1);
+  return base + path;
+}
 //const { token } = require('./token');
 //import {token} from ("./token.js")
 //console.log(token);
