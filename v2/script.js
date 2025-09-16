@@ -331,6 +331,7 @@ async function fetchUserInfo(accountId) {
   dom.innerHTML = '<div class="loader"></div>';
 
   try {
+    // ユーザー情報取得
     const lookupRes = await fetch(`https://fljpapi.vigyanfv.workers.dev/lookup?accountid=${accountId}`);
     if (!lookupRes.ok) throw new Error(`HTTPエラー: ${lookupRes.status}`);
     const lookupData = await lookupRes.json();
@@ -345,25 +346,29 @@ async function fetchUserInfo(accountId) {
       }
     }
 
-    // ランク取得
+    // ランク情報取得
     const rankRes = await fetch(`https://fljpapi.vigyanfv.workers.dev/rank/${userId}`);
     if (!rankRes.ok) throw new Error(`HTTPエラー: ${rankRes.status}`);
     const rankData = await rankRes.json();
 
-    let rankHtml = '';
-    if (rankData && rankData.data) {
-      const rd = rankData.data;
-      rankHtml = `
-        <ul class="info-list">
-          <li><strong>ユーザー名:</strong> ${escapeHtml(userName)}</li>
-          <li><strong>アカウントID:</strong> ${escapeHtml(userId)}</li>
-          <li><strong>ランクポイント:</strong> ${escapeHtml(rd.rankPoints ?? '不明')}</li>
-          <li><strong>ランク:</strong> ${escapeHtml(rd.rank ?? '不明')}</li>
-          <li><strong>最高ランク:</strong> ${escapeHtml(rd.topRank ?? '不明')}</li>
-        </ul>
-      `;
+    let rankHtml = `<ul class="info-list">
+      <li><strong>ユーザー名:</strong> ${escapeHtml(userName)}</li>
+      <li><strong>アカウントID:</strong> ${escapeHtml(userId)}</li>
+    </ul>`;
+
+    if (rankData && Array.isArray(rankData.data)) {
+      rankHtml += '<h3>ランク情報一覧</h3><ul class="rank-list">';
+      rankData.data.forEach(rankItem => {
+        rankHtml += `<li>
+          <strong>${escapeHtml(rankItem.rankingTypeJP || rankItem.rankingType)}:</strong> 
+          現在: ${escapeHtml(rankItem.currentDivisionJP ?? '不明')} 
+          / 最高: ${escapeHtml(rankItem.highestDivisionJP ?? '不明')} 
+          (${escapeHtml(rankItem.promotionProgressPercent ?? '')})
+        </li>`;
+      });
+      rankHtml += '</ul>';
     } else {
-      rankHtml = `<div class="error">ランク情報が見つかりません。</div>`;
+      rankHtml += `<div class="error">ランク情報が見つかりません。</div>`;
     }
 
     dom.innerHTML = `<div class="card">${rankHtml}</div>`;
@@ -371,6 +376,8 @@ async function fetchUserInfo(accountId) {
     dom.innerHTML = `<div class="error">ユーザー情報取得失敗: ${escapeHtml(err.message)}</div>`;
   }
 }
+
+
 
 document.getElementById('user-form').addEventListener('submit', e => {
   e.preventDefault();
