@@ -331,7 +331,6 @@ async function fetchUserInfo(accountId) {
   dom.innerHTML = '<div class="loader"></div>';
 
   try {
-    // ユーザー情報取得
     const lookupRes = await fetch(`https://fljpapi.vigyanfv.workers.dev/lookup?accountid=${accountId}`);
     if (!lookupRes.ok) throw new Error(`HTTPエラー: ${lookupRes.status}`);
     const lookupData = await lookupRes.json();
@@ -346,55 +345,32 @@ async function fetchUserInfo(accountId) {
       }
     }
 
-    // ランク情報取得
+    // ランク取得
     const rankRes = await fetch(`https://fljpapi.vigyanfv.workers.dev/rank/${userId}`);
     if (!rankRes.ok) throw new Error(`HTTPエラー: ${rankRes.status}`);
     const rankData = await rankRes.json();
 
-    let rankHtml = `<div class="card">
-      <h2>ユーザー情報</h2>
-      <ul class="info-list">
-        <li><strong>ユーザー名:</strong> ${escapeHtml(userName)}</li>
-        <li><strong>アカウントID:</strong> ${escapeHtml(userId)}</li>
-      </ul>`;
-
-    if (Array.isArray(rankData) && rankData.length > 0) {
-      rankHtml += `<h3>ランク情報一覧</h3>
-        <table class="rank-table" border="1" cellpadding="5" cellspacing="0">
-          <thead>
-            <tr>
-              <th>ランクタイプ</th>
-              <th>現在のランク</th>
-              <th>最高ランク</th>
-              <th>昇格進捗</th>
-              <th>最終更新</th>
-            </tr>
-          </thead>
-          <tbody>`;
-
-      rankData.forEach(item => {
-        rankHtml += `<tr>
-          <td>${escapeHtml(item.rankingTypeJP || item.rankingType)}</td>
-          <td>${escapeHtml(item.currentDivisionJP ?? '不明')}</td>
-          <td>${escapeHtml(item.highestDivisionJP ?? '不明')}</td>
-          <td>${escapeHtml(item.promotionProgressPercent ?? '0%')}</td>
-          <td>${escapeHtml(item.lastUpdated ? new Date(item.lastUpdated).toLocaleString() : '不明')}</td>
-        </tr>`;
-      });
-
-      rankHtml += `</tbody></table>`;
+    let rankHtml = '';
+    if (rankData && rankData.data) {
+      const rd = rankData.data;
+      rankHtml = `
+        <ul class="info-list">
+          <li><strong>ユーザー名:</strong> ${escapeHtml(userName)}</li>
+          <li><strong>アカウントID:</strong> ${escapeHtml(userId)}</li>
+          <li><strong>ランクポイント:</strong> ${escapeHtml(rd.rankPoints ?? '不明')}</li>
+          <li><strong>ランク:</strong> ${escapeHtml(rd.rank ?? '不明')}</li>
+          <li><strong>最高ランク:</strong> ${escapeHtml(rd.topRank ?? '不明')}</li>
+        </ul>
+      `;
     } else {
-      rankHtml += `<div class="error">ランク情報が見つかりません。</div>`;
+      rankHtml = `<div class="error">ランク情報が見つかりません。</div>`;
     }
 
-    rankHtml += `</div>`; // cardの閉じタグ
-    dom.innerHTML = rankHtml;
+    dom.innerHTML = `<div class="card">${rankHtml}</div>`;
   } catch (err) {
     dom.innerHTML = `<div class="error">ユーザー情報取得失敗: ${escapeHtml(err.message)}</div>`;
   }
 }
-
-
 
 document.getElementById('user-form').addEventListener('submit', e => {
   e.preventDefault();
