@@ -351,31 +351,59 @@ async function fetchUserInfo(accountId) {
     if (!rankRes.ok) throw new Error(`HTTPエラー: ${rankRes.status}`);
     const rankData = await rankRes.json();
 
-    let rankHtml = `<ul class="info-list">
-      <li><strong>ユーザー名:</strong> ${escapeHtml(userName)}</li>
-      <li><strong>アカウントID:</strong> ${escapeHtml(userId)}</li>
-    </ul>`;
+    let rankHtml = `<div class="card">
+      <h2>ユーザー情報</h2>
+      <ul class="info-list">
+        <li><strong>ユーザー名:</strong> ${escapeHtml(userName)}</li>
+        <li><strong>アカウントID:</strong> ${escapeHtml(userId)}</li>
+      </ul>`;
 
-    if (rankData && Array.isArray(rankData.data)) {
-      rankHtml += '<h3>ランク情報一覧</h3><ul class="rank-list">';
-      rankData.data.forEach(rankItem => {
-        rankHtml += `<li>
-          <strong>${escapeHtml(rankItem.rankingTypeJP || rankItem.rankingType)}:</strong> 
-          現在: ${escapeHtml(rankItem.currentDivisionJP ?? '不明')} 
-          / 最高: ${escapeHtml(rankItem.highestDivisionJP ?? '不明')} 
-          (${escapeHtml(rankItem.promotionProgressPercent ?? '')})
-        </li>`;
+    if (Array.isArray(rankData) && rankData.length > 0) {
+      rankHtml += `<h3>ランク情報一覧</h3>
+        <table class="rank-table" border="1" cellpadding="5" cellspacing="0">
+          <thead>
+            <tr>
+              <th>ランクタイプ</th>
+              <th>現在のランク</th>
+              <th>最高ランク</th>
+              <th>昇格進捗</th>
+              <th>最終更新</th>
+            </tr>
+          </thead>
+          <tbody>`;
+
+      rankData.forEach(item => {
+        rankHtml += `<tr>
+          <td>${escapeHtml(item.rankingTypeJP || item.rankingType)}</td>
+          <td>${escapeHtml(item.currentDivisionJP ?? '不明')}</td>
+          <td>${escapeHtml(item.highestDivisionJP ?? '不明')}</td>
+          <td>${escapeHtml(item.promotionProgressPercent ?? '0%')}</td>
+          <td>${escapeHtml(item.lastUpdated ? new Date(item.lastUpdated).toLocaleString() : '不明')}</td>
+        </tr>`;
       });
-      rankHtml += '</ul>';
+
+      rankHtml += `</tbody></table>`;
     } else {
       rankHtml += `<div class="error">ランク情報が見つかりません。</div>`;
     }
 
-    dom.innerHTML = `<div class="card">${rankHtml}</div>`;
+    rankHtml += `</div>`; // cardの閉じタグ
+    dom.innerHTML = rankHtml;
   } catch (err) {
     dom.innerHTML = `<div class="error">ユーザー情報取得失敗: ${escapeHtml(err.message)}</div>`;
   }
 }
+
+// HTMLエスケープ関数
+function escapeHtml(str) {
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
 
 
 
