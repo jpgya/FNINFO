@@ -397,7 +397,6 @@ async function fetchUserInfo(accountId) {
 
 
 
-
 document.getElementById('user-form').addEventListener('submit', e => {
   e.preventDefault();
   const input = document.getElementById('epic-name').value.trim();
