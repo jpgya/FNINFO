@@ -1,69 +1,373 @@
 <!DOCTYPE html>
 <html lang="ja">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>FNINFO v2</title>
-<style>
-    body {
-        font-family: 'Segoe UI', 'Yu Gothic', 'Meiryo', sans-serif;
-        background: linear-gradient(135deg, #1e3c72, #2a5298);
-        color: #fff;
+  <head>
+    <link rel="icon" href="../Aseetdata/log.png">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <title>フォートナイト情報ツール FNINFO (FLJP API v2)</title>
+    <meta name="description" content="フォートナイトのイベント・ニュース・ビルド・ユーザー検索ができる便利ツール">
+    <script src="https://morning-resonance-8624.vigyanfv.workers.dev"></script>
+    <script defer src="./js/0001.js"></script>
+    <script defer src="./js/0002.js"></script>
+    <script type="module" src="./script.js"></script>
+    <script type="module" src="./captcha.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/crypto-js@4.1.1/crypto-js.min.js"></script>
+    <meta name="theme-color" content="#000000">
+    <link rel="apple-touch-icon" href="../Aseetdata/log.png">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Montserrat:700,400&display=swap">
+    <link rel="stylesheet" href="./css/0001.css">
+    <link rel="stylesheet" href="./css/0002.css">
+    <link rel="stylesheet" href="./css/0003.css">
+    <link rel="stylesheet" href="./css/0004.css">
+    <link rel="stylesheet" href="./css/0005.css">
+    <link rel="stylesheet" href="./css/0006.css">
+    <link rel="stylesheet" href="./css/0007.css">
+    <link rel="stylesheet" href="./css/0008.css">
+    <link rel="stylesheet" href="./css/0009.css">
+    <link rel="stylesheet" href="./css/styles.css">
+    <style>
+      :root {
+        --primary: #1e293b;
+        --secondary: #334155;
+        --accent: #38bdf8;
+        --accent2: #fbbf24;
+        --bg: #0f172a;
+        --text: #f1f5f9;
+        --card: #222c3a;
+        --border: #334155;
+        --radius: 1.2em;
+        --shadow: 0 4px 24px 0 rgba(30,41,59,0.25);
+      }
+      html, body {
+        background: var(--bg);
+        color: var(--text);
+        font-family: 'Montserrat', 'Segoe UI', 'Meiryo', sans-serif;
         margin: 0;
         padding: 0;
-        height: 100vh;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-    }
-    .container {
-        background: rgba(255, 255, 255, 0.08);
-        backdrop-filter: blur(8px);
-        padding: 2rem 3rem;
-        border-radius: 20px;
-        box-shadow: 0 8px 24px rgba(0,0,0,0.3);
-        text-align: center;
-        max-width: 500px;
-        width: 90%;
-        animation: fadeIn 1s ease-in-out;
-    }
-    h1 {
-        font-size: 2rem;
-        margin-bottom: 0.5rem;
-    }
-    p {
-        font-size: 1.1rem;
-        margin-bottom: 1.5rem;
-    }
-    a {
-        display: inline-block;
-        padding: 0.6rem 1.2rem;
-        font-size: 1rem;
+        min-height: 100vh;
+      }
+      header {
+        background: linear-gradient(90deg, var(--primary) 60%, var(--accent) 100%);
         color: #fff;
-        background: linear-gradient(90deg, #ff7e5f, #feb47b);
-        border-radius: 10px;
-        text-decoration: none;
-        transition: transform 0.2s, box-shadow 0.2s;
-    }
-    a:hover {
-        transform: scale(1.05);
-        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-    }
-    @keyframes fadeIn {
-        from { opacity: 0; transform: translateY(10px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
-</style>
-</head>
-<body>
-    <div class="container">
-        <h1>FNINFO v2</h1>
-        <p>FNINFO v2は現在未公開です。</p>
-        <a href="https://jpgya.github.io/FNINFO/v1">← FNINFO v1へ</a>
-        <a href="https://jpgya.github.io/FNINFO/">← ドキュメントへ</a>
-    </div>
-    </div>
+        font-size: 2.2em;
+        font-weight: 700;
+        letter-spacing: 0.05em;
+        padding: 1.2em 2em;
+        box-shadow: var(--shadow);
+        border-radius: 0 0 var(--radius) var(--radius);
+        text-shadow: 0 2px 8px #0008;
+        margin-bottom: 1.5em;
+      }
+      nav.tabs {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5em;
+        justify-content: center;
+        background: var(--secondary);
+        padding: 0.7em 0.5em;
+        border-radius: var(--radius);
+        margin: 0 1em 2em 1em;
+        box-shadow: 0 2px 12px #0004;
+      }
+      .tab {
+        background: none;
+        border: none;
+        color: var(--text);
+        font-size: 1.1em;
+        font-weight: 600;
+        padding: 0.7em 1.5em;
+        border-radius: var(--radius);
+        cursor: pointer;
+        transition: background 0.2s, color 0.2s;
+        outline: none;
+        position: relative;
+      }
+      .tab.active, .tab:focus, .tab:hover {
+        background: var(--accent);
+        color: #222;
+        box-shadow: 0 2px 8px #38bdf855;
+      }
+      main {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 0 1em 2em 1em;
+      }
+      section.tab-content {
+        display: none;
+        background: var(--card);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+        padding: 2em 1.5em 1.5em 1.5em;
+        margin-bottom: 2em;
+        animation: fadeIn 0.4s;
+      }
+      section.tab-content.active {
+        display: block;
+      }
+      @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(20px);}
+        to { opacity: 1; transform: none;}
+      }
+      h2 {
+        font-size: 1.5em;
+        color: var(--accent2);
+        margin-top: 0;
+        margin-bottom: 0.5em;
+        letter-spacing: 0.03em;
+      }
+      .caption {
+        font-size: 1em;
+        color: #b6e0fe;
+        margin-bottom: 1.2em;
+      }
+      label {
+        font-weight: 600;
+        color: var(--accent);
+      }
+      select, input[type="text"] {
+        background: var(--secondary);
+        color: var(--text);
+        border: 1px solid var(--border);
+        border-radius: 0.5em;
+        padding: 0.5em 1em;
+        font-size: 1em;
+        margin-right: 0.5em;
+        outline: none;
+        transition: border 0.2s;
+      }
+      select:focus, input[type="text"]:focus {
+        border: 1.5px solid var(--accent);
+      }
+      button, .input-group button {
+        background: var(--accent);
+        color: #222;
+        border: none;
+        border-radius: 0.5em;
+        padding: 0.5em 1.5em;
+        font-size: 1em;
+        font-weight: 700;
+        cursor: pointer;
+        transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+        box-shadow: 0 2px 8px #38bdf855;
+      }
+      button:hover, .input-group button:hover {
+        background: var(--accent2);
+        color: #222;
+      }
+      .input-group {
+        display: flex;
+        gap: 0.5em;
+        align-items: center;
+        margin-bottom: 1em;
+      }
+      #user-result, #news-content, #timeline-content, #build-content, #tournaments-content, #playlists-content, #status-content, #hotfix-content {
+        margin-top: 1em;
+        background: #1e293b88;
+        border-radius: 0.7em;
+        padding: 1em;
+        min-height: 2em;
+        box-shadow: 0 1px 6px #0002;
+      }
+      .loader {
+        border: 4px solid #334155;
+        border-top: 4px solid var(--accent);
+        border-radius: 50%;
+        width: 32px;
+        height: 32px;
+        animation: spin 1s linear infinite;
+        margin: 1em auto;
+        display: block;
+      }
+      @keyframes spin {
+        0% { transform: rotate(0deg);}
+        100% { transform: rotate(360deg);}
+      }
+      .telop {
+        position: fixed;
+        bottom: 2em;
+        left: 50%;
+        transform: translateX(-50%);
+        background: linear-gradient(90deg, var(--accent2) 60%, var(--accent) 100%);
+        color: #222;
+        border-radius: 2em;
+        box-shadow: 0 4px 24px #0006;
+        padding: 0.7em 2.5em 0.7em 1.5em;
+        font-size: 1.1em;
+        z-index: 1000;
+        display: flex;
+        align-items: center;
+        min-width: 280px;
+        max-width: 90vw;
+        animation: telopIn 0.5s;
+      }
+      @keyframes telopIn {
+        from { opacity: 0; transform: translate(-50%, 40px);}
+        to { opacity: 1; transform: translate(-50%, 0);}
+      }
+      .telop__close {
+        background: none;
+        border: none;
+        color: #222;
+        font-size: 1.5em;
+        margin-left: 1em;
+        cursor: pointer;
+        font-weight: bold;
+        transition: color 0.2s;
+      }
+      .telop__close:hover {
+        color: #b91c1c;
+      }
+      @media (max-width: 700px) {
+        header {
+          font-size: 1.2em;
+          padding: 0.8em 1em;
+        }
+        nav.tabs {
+          flex-direction: column;
+          gap: 0.2em;
+          padding: 0.5em 0.2em;
+        }
+        main {
+          padding: 0 0.2em 2em 0.2em;
+        }
+        section.tab-content {
+          padding: 1em 0.5em 1em 0.5em;
+        }
+        .telop {
+          font-size: 1em;
+          padding: 0.5em 1.2em 0.5em 1em;
+        }
+      }
+      /* Card style for About section */
+      #this-page-info > div {
+        background: #fff1;
+        border-radius: 0.7em;
+        padding: 1em 1.2em;
+        margin-top: 1em;
+        color: #ffb3b3;
+        font-size: 1em;
+        box-shadow: 0 1px 6px #0002;
+      }
+      #this-page-info strong {
+        color: #f87171;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <img src="../Aseetdata/log.png" alt="FNINFO Logo" style="height:2em;vertical-align:middle;margin-right:0.7em;border-radius:0.4em;box-shadow:0 1px 6px #0004;">
+      フォートナイト情報ツール
+    </header>
+    <nav class="tabs" role="tablist">
+      <button class="tab active" data-tab="news" role="tab" aria-selected="true">ニュース</button>
+      <button class="tab" data-tab="timeline" role="tab" aria-selected="false">イベントスケジュール</button>
+      <button class="tab" data-tab="build" role="tab" aria-selected="false">ビルド情報</button>
+      <button class="tab" data-tab="tournaments" role="tab" aria-selected="false">トーナメント一覧</button>
+      <button class="tab" data-tab="playlists" role="tab" aria-selected="false">プレイリスト情報</button>
+      <button class="tab" data-tab="status" role="tab" aria-selected="false">ステータス情報</button>
+      <button class="tab" data-tab="hotfix" role="tab" aria-selected="false">ホットフィックス</button>
+      <button class="tab" data-tab="user-search" role="tab" aria-selected="false">ユーザー検索</button>
+      <button class="tab" data-tab="this-page-info" role="tab" aria-selected="false">このサイトについて</button>
+    </nav>
+    <main>
+      <section id="news" class="tab-content active" role="tabpanel">
+        <h2>ニュースフィード</h2>
+        <div class="caption">ゲーム内ニュースフィード</div>
+        <div style="margin-bottom:1em;">
+          <label for="news-tag-select">ニュースタグ選択：</label>
+          <select id="news-tag-select"></select>
+          <button id="news-search-btn">検索する</button>
+        </div>
+        <div id="news-content"></div>
+      </section>
 
-    
-</body>
+      <section id="timeline" class="tab-content" role="tabpanel">
+        <h2>イベントスケジュール</h2>
+        <div class="caption">現在・今後のゲーム内イベント一覧</div>
+        <div id="timeline-content"><div class="loader"></div></div>
+      </section>
+
+      <section id="build" class="tab-content" role="tabpanel">
+        <h2>ビルド情報（全プラットフォーム）</h2>
+        <div class="caption">APIで対応しているプラットフォームすべての最新ビルド</div>
+        <div id="build-content"><div class="loader"></div></div>
+      </section>
+
+      <section id="tournaments" class="tab-content" role="tabpanel">
+        <h2>トーナメント一覧</h2>
+        <div class="caption">最新の大会・報酬情報</div>
+        <div id="tournaments-content"><div class="loader"></div></div>
+      </section>
+
+      <section id="playlists" class="tab-content" role="tabpanel">
+        <h2>プレイリスト情報</h2>
+        <div class="caption">バトルロワイヤルのプレイリスト一覧</div>
+        <div id="playlists-content"><div class="loader"></div></div>
+      </section>
+
+      <section id="status" class="tab-content" role="tabpanel">
+        <h2>ステータス情報</h2>
+        <div class="caption">フォートナイトのサーバー・メンテナンス状態</div>
+        <div id="status-content"><div class="loader"></div></div>
+      </section>
+      <section id="hotfix" class="tab-content" role="tabpanel">
+        <h2>ホットフィックス一覧</h2>
+        <div class="caption">Epicが配信しているクライアントホットフィックスファイル</div>
+        <div id="hotfix-content"><div class="loader"></div></div>
+      </section>
+
+      <section id="user-search" class="tab-content" role="tabpanel">
+        <h2>ユーザー検索（EpicアカウントID）</h2>
+        <div class="caption">EpicアカウントIDからユーザー名・ランク等を調べられます</div>
+        <form id="user-form" autocomplete="off">
+          <div class="input-group">
+            <input type="text" id="epic-name" placeholder="EpicアカウントIDを入力（ユーザー名不可）" required>
+            <button type="submit">検索</button>
+          </div>
+        </form>
+        <div id="user-result"></div>
+      </section>  
+      <section id="this-page-info" class="tab-content" role="tabpanel">
+        <h2>このサイトについて</h2>
+        <div>
+          <div><strong>2025-08-08記載：</strong> 本サイトおよび本サービスは、Epic Games, Inc. またはその関連会社が提供・運営するものではありません。
+          本サイトは非公式のファン制作によるものであり、Epic Games, Inc. とは一切の提携・関係はありません。
+"Fortnite" およびその関連名称・商標は Epic Games, Inc. の財産です。</div>
+          <div>This site and its services are not provided, operated, or endorsed by Epic Games, Inc. or its affiliates.
+This is an unofficial, fan-made project and has no affiliation with Epic Games, Inc.
+"Fortnite" and all related names and trademarks are the property of Epic Games, Inc.</div>
+        </div>
+      </section>    
+    </main>
+    <div class="telop" role="region" aria-label="サイトからのお知らせ" id="site-telop">
+      <div class="telop__wrap" aria-hidden="false">
+        <div class="telop__content" id="telop-text">
+          FNINFO v2は不安定なため、使用できない機能があります。
+        </div>
+      </div>
+      <button class="telop__close" id="telop-close" aria-label="テロップを閉じる">×</button>
+    </div>
+    <script>
+      // Tab switching UI (for accessibility and style)
+      document.querySelectorAll('.tab').forEach(tab => {
+        tab.addEventListener('click', function() {
+          document.querySelectorAll('.tab').forEach(t => {
+            t.classList.remove('active');
+            t.setAttribute('aria-selected', 'false');
+          });
+          this.classList.add('active');
+          this.setAttribute('aria-selected', 'true');
+          const tabName = this.getAttribute('data-tab');
+          document.querySelectorAll('.tab-content').forEach(sec => {
+            sec.classList.remove('active');
+          });
+          document.getElementById(tabName).classList.add('active');
+        });
+      });
+      // Telop close
+      document.getElementById('telop-close').onclick = function() {
+        document.getElementById('site-telop').style.display = 'none';
+      };
+    </script>
+  </body>
 </html>
