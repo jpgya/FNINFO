@@ -43,7 +43,7 @@ function toggleSidebar() {
       app.classList.add('show-sidebar');
       hamburgerMenu.setAttribute('aria-expanded', 'true');
       hamburgerMenu.textContent = '✕';
-}
+    }
 
 if (toggleBtn) {
     toggleBtn.addEventListener('click', function(){ setCollapsed(!app.classList.contains('collapsed')); });
