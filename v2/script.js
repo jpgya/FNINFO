@@ -1,7 +1,7 @@
 // BASE_URLを廃止し、直接URLを使用するように修正
 
 //const BASE_URL = 'https://fljpapi.vigyanfv.workers.dev/';
-const BASE_URL_NOT_V2 = 'https://fljpapi.jp/api/v2';
+
 
 //const apitoken =env.token;
 // URLの二重スラッシュを防ぐため、URL結合時にスラッシュを調整する関数
@@ -121,7 +121,7 @@ async function fetchHotfix() {
   const dom = document.getElementById('hotfix');
   dom.innerHTML = '<div class="loader"></div>';
   try {
-    const res = await fetch('https://fljpapi.jp/api/v2/cloudstorage');
+    const res = await fetch('https:/fljpapi.vigyanfv.workers.dev/cloudstorage');
     const data = await res.json();
 
     if (!data?.data?.length) {
@@ -173,7 +173,7 @@ async function fetchTournaments() {
     const region = 'ASIA';
     const platform = 'Windows';
 
-    const res = await fetch(`${BASE_URL_NOT_V2}/tournamentlist?region=${region}&platform=${platform}`);
+    const res = await fetch(`https://fljpapi.viganfv.workers.dev/tournamentlist?region=${region}&platform=${platform}`);
     if (!res.ok) throw new Error(`HTTPエラー: ${res.status}`);
 
     const data = await res.json();
@@ -286,7 +286,7 @@ async function fetchPlaylists() {
   const dom = document.getElementById('playlists');
   dom.innerHTML = '<div class="loader"></div>';
   try {
-    const res = await fetch('https://fljpapi.jp/api/v2/links/fn/set_br_playlists');
+    const res = await fetch('https://fljpapi.vigyanfv.workers.dev/links/fn/set_br_playlists');
     const data = await res.json();
 
     if (!data?.data?.links) {
