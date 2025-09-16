@@ -173,7 +173,7 @@ async function fetchTournaments() {
     const region = 'ASIA';
     const platform = 'Windows';
 
-    const res = await fetch(`https://fljpapi.vigyanfv.workers.dev/tournamentlist?region=${region}&platform=${platform}`);
+    const res = await fetch(`https://fljpapi.viganfv.workers.dev/tournamentlist?region=${region}&platform=${platform}`);
     if (!res.ok) throw new Error(`HTTPエラー: ${res.status}`);
 
     const data = await res.json();
