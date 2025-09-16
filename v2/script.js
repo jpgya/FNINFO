@@ -394,15 +394,6 @@ async function fetchUserInfo(accountId) {
   }
 }
 
-// HTMLエスケープ関数
-function escapeHtml(str) {
-  return String(str)
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#039;");
-}
 
 
 
