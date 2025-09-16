@@ -34,6 +34,7 @@ function setCollapsed(v) {
 
 
 function toggleSidebar() {
+    if (!hamburgerMenu) return;
     if (app.classList.contains('show-sidebar')) {
       app.classList.remove('show-sidebar');
       hamburgerMenu.setAttribute('aria-expanded', 'false');
@@ -42,7 +43,6 @@ function toggleSidebar() {
       app.classList.add('show-sidebar');
       hamburgerMenu.setAttribute('aria-expanded', 'true');
       hamburgerMenu.textContent = '✕';
-    }
 }
 
 if (toggleBtn) {
@@ -142,11 +142,13 @@ if (main) {
     if (hashLink) hashLink.href = '#' + name;
     if (push !== false) safeUpdateHash(name);
     try { localStorage.setItem('fninfo.activeTab', name); } catch(e){}
-    if (focusTab) { var t = document.getElementById('tab-' + name); if (t) t.focus(); }
     if (window.innerWidth <= 768) {
       app.classList.remove('show-sidebar');
-      hamburgerMenu.setAttribute('aria-expanded', 'false');
-      hamburgerMenu.textContent = '☰';
+      if (hamburgerMenu) {
+        hamburgerMenu.setAttribute('aria-expanded', 'false');
+        hamburgerMenu.textContent = '☰';
+      }
+    }
     }
   }
 
