@@ -121,7 +121,7 @@ async function fetchHotfix() {
   const dom = document.getElementById('hotfix');
   dom.innerHTML = '<div class="loader"></div>';
   try {
-    const res = await fetch('https:/fljpapi.vigyanfv.workers.dev/cloudstorage');
+    const res = await fetch('https://fljpapi.vigyanfv.workers.dev/cloudstorage');
     const data = await res.json();
 
     if (!data?.data?.length) {
@@ -173,7 +173,7 @@ async function fetchTournaments() {
     const region = 'ASIA';
     const platform = 'Windows';
 
-    const res = await fetch(`https://fljpapi.viganfv.workers.dev/tournamentlist?region=${region}&platform=${platform}`);
+    const res = await fetch(`https://fljpapi.vigyanfv.workers.dev/tournamentlist?region=${region}&platform=${platform}`);
     if (!res.ok) throw new Error(`HTTPエラー: ${res.status}`);
 
     const data = await res.json();
