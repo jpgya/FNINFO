@@ -143,9 +143,7 @@
       .app.show-sidebar .sidebar {
         transform: translateX(0);
       }
-      .collapse-btn {
-        display: none; 
-      }
+      
       header.topbar {
         justify-content: space-between;
       }
