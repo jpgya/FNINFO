@@ -43,6 +43,9 @@
         <button class="tab-btn" role="tab" id="account-tab" aria-selected="false" data-tab="account">
           <span class="icon">👤</span><span class="tab-text">アカウント情報</span>
         </button>
+        <button class="tab-btn" role="tab" id="tab-text" aria-selected="false" data-tab="use">
+          <span class="icon">🔹</span><span class="tab-text">FNINFOの使い方</span>
+        </button>
       </nav>
 
       <div class="footer-note">
@@ -216,7 +219,14 @@
       </section>
     </main>
   </div>
-
-  <div class="errbar" id="errbar" role="status" aria-live="polite"></div>
+  <div class="tab-panel" id="" role="tabpanel" aria-labelledby="use">
+    <article class="card">
+            <h>準備中...</h>
+          </article>
+        </div>
+  </div>
+  <div class="errbar" id="errbar" role="status" aria-live="polite">
+    
+  </div>
 </body>
 </html>
