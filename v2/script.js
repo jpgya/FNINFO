@@ -123,55 +123,7 @@ async function fetchBuilds() {
 }
 
 // ボタン作成
-const statusDom = document.getElementById('status');
-const refreshBtn = document.createElement('button');
-refreshBtn.id = 'refreshBtn';
-refreshBtn.textContent = '更新';
-refreshBtn.disabled = true; // 初回は無効
-statusDom.insertAdjacentElement('afterend', refreshBtn);
 
-async function fetchStatus() {
-  const dom = document.getElementById('status');
-  const btn = document.getElementById('refreshBtn');
-  btn.disabled = true; // 押せない状態に
-  dom.innerHTML = '<div class="loader"></div>';
-
-  try {
-    const res = await fetch(`https://fljpapi.vigyanfv.workers.dev/fortnitestatus`);
-    const data = await res.json();
-
-    const fn = data.fnstatus || {};
-    const queue = data.queue || {};
-    const maintenance = data.maintenance || [];
-
-    let html = '<ul class="info-list">';
-    
-    const statusText = fn.status === 'UP' ? 'オンライン' : 'オフライン';
-    html += `<li><strong>サーバー状態:</strong> ${statusText}</li>`;
-    if (fn.message) html += `<li><strong>メッセージ:</strong> ${fn.message}</li>`;
-    if (fn.maintenanceUri) html += `<li><strong>メンテナンスURL:</strong> <a href="${fn.maintenanceUri}" target="_blank">${fn.maintenanceUri}</a></li>`;
-
-    html += `<li><strong>キュー状態:</strong> ${queue.active ? '有効' : 'なし'}</li>`;
-    if (queue.expectedWait) html += `<li><strong>予想待ち時間:</strong> ${queue.expectedWait} 秒</li>`;
-
-    if (maintenance.length > 0) {
-      html += `<li><strong>メンテナンス中:</strong> ${maintenance.length} 件<ul>`;
-      maintenance.forEach((m, i) => {
-        html += `<li>${i + 1}. ${m}</li>`;
-      });
-      html += '</ul></li>';
-    }
-
-    html += '</ul>';
-    dom.innerHTML = `<div class="card">${html}</div>`;
-
-  } catch (err) {
-    dom.innerHTML = `<div class="error">ステータス取得失敗: ${err.message}</div>`;
-  }
-
-  // 10秒後にボタンを再度有効化
-  setTimeout(() => refreshBtn.disabled = false, 10000);
-}
 
 // 初回取得
 fetchStatus();
@@ -526,3 +478,4 @@ window.addEventListener('DOMContentLoaded', () => {
     fetchNewsByTag(tag);
   });
 });
+
