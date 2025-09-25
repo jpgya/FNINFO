@@ -126,30 +126,48 @@ async function fetchBuilds() {
 async function fetchStatus() {
   const dom = document.getElementById('status');
   dom.innerHTML = '<div class="loader"></div>';
+
   try {
     const res = await fetch(`https://fljpapi.vigyanfv.workers.dev/fortnitestatus`);
     const data = await res.json();
 
-    const fn = data.fnstatus;
-    const queue = data.queue;
-    const maintenance = data.maintenance;
+    const fn = data.fnstatus || {};
+    const queue = data.queue || {};
+    const maintenance = data.maintenance || [];
 
     let html = '<ul class="info-list">';
-    html += `<li><strong>サーバー状態:</strong> ${fn.status === 'UP' ? 'オンライン' : 'オフライン'}</li>`;
-    html += `<li><strong>メッセージ:</strong> ${fn.message}</li>`;
-    html += `<li><strong>キュー:</strong> ${queue.active ? '有効' : 'なし'}</li>`;
-    if (queue.expectedWait)
-      html += `<li><strong>待ち時間:</strong> ${queue.expectedWait} 秒</li>`;
-    if (Array.isArray(maintenance) && maintenance.length > 0) {
-      html += `<li><strong>メンテナンス中:</strong> ${maintenance.length} 件</li>`;
-    }
-    html += '</ul>';
+    
+    // サーバーステータス
+    const statusText = fn.status === 'UP' ? 'オンライン' : 'オフライン';
+    html += `<li><strong>サーバー状態:</strong> ${statusText}</li>`;
 
+    // メッセージ
+    if (fn.message) html += `<li><strong>メッセージ:</strong> ${fn.message}</li>`;
+
+    // メンテナンスURL
+    if (fn.maintenanceUri) html += `<li><strong>メンテナンスURL:</strong> <a href="${fn.maintenanceUri}" target="_blank">${fn.maintenanceUri}</a></li>`;
+
+    // キュー情報
+    html += `<li><strong>キュー状態:</strong> ${queue.active ? '有効' : 'なし'}</li>`;
+    if (queue.expectedWait) html += `<li><strong>予想待ち時間:</strong> ${queue.expectedWait} 秒</li>`;
+
+    // メンテナンス一覧
+    if (maintenance.length > 0) {
+      html += `<li><strong>メンテナンス中:</strong> ${maintenance.length} 件<ul>`;
+      maintenance.forEach((m, i) => {
+        html += `<li>${i + 1}. ${m}</li>`;
+      });
+      html += '</ul></li>';
+    }
+
+    html += '</ul>';
     dom.innerHTML = `<div class="card">${html}</div>`;
+
   } catch (err) {
     dom.innerHTML = `<div class="error">ステータス取得失敗: ${err.message}</div>`;
   }
 }
+
 
 async function fetchHotfix() {
   const dom = document.getElementById('hotfix');
@@ -358,16 +376,11 @@ async function fetchPlaylists() {
 
 async function fetchUserInfo(accountId) {
   const dom = document.getElementById('user-result');
-  if (!dom) {
-    console.warn('DOM element #user-result が見つかりません');
-    return;
-  }
+  if (!dom) return;
   dom.innerHTML = '<div class="loader"></div>';
 
   try {
-    // ユーザー情報取得
     const lookupRes = await fetch(`https://fljpapi.vigyanfv.workers.dev/lookup?accountid=${accountId}`);
-    if (!lookupRes.ok) throw new Error(`HTTPエラー: ${lookupRes.status}`);
     const lookupData = await lookupRes.json();
 
     let userName = '不明';
@@ -380,53 +393,51 @@ async function fetchUserInfo(accountId) {
       }
     }
 
-    // ランク情報取得
     const rankRes = await fetch(`https://fljpapi.vigyanfv.workers.dev/rank/${userId}`);
-    if (!rankRes.ok) throw new Error(`HTTPエラー: ${rankRes.status}`);
     const rankData = await rankRes.json();
 
-    let rankHtml = `<div class="card">
+    let html = `<div class="card">
       <h2>ユーザー情報</h2>
-      <ul class="info-list">
+      <ul>
         <li><strong>ユーザー名:</strong> ${escapeHtml(userName)}</li>
         <li><strong>アカウントID:</strong> ${escapeHtml(userId)}</li>
-      </ul>`;
+      </ul>
+    </div>`;
 
     if (Array.isArray(rankData) && rankData.length > 0) {
-      rankHtml += `<h3>ランク情報一覧</h3>
-        <table class="rank-table" border="1" cellpadding="5" cellspacing="0">
-          <thead>
-            <tr>
-              <th>ランクタイプ</th>
-              <th>現在のランク</th>
-              <th>最高ランク</th>
-              <th>昇格進捗</th>
-              <th>最終更新</th>
-            </tr>
-          </thead>
-          <tbody>`;
-
-      rankData.forEach(item => {
-        rankHtml += `<tr>
-          <td>${escapeHtml(item.rankingTypeJP || item.rankingType)}</td>
-          <td>${escapeHtml(item.currentDivisionJP ?? '不明')}</td>
-          <td>${escapeHtml(item.highestDivisionJP ?? '不明')}</td>
-          <td>${escapeHtml(item.promotionProgressPercent ?? '0%')}</td>
-          <td>${escapeHtml(item.lastUpdated ? new Date(item.lastUpdated).toLocaleString() : '不明')}</td>
-        </tr>`;
+      rankData.forEach(rank => {
+        html += `<div class="card">
+          <h3>${escapeHtml(rank.rankingTypeJP ?? rank.rankingType ?? '不明')}</h3>
+          <ul>
+            <li><strong>現在ランク:</strong> ${escapeHtml(rank.currentDivisionJP ?? rank.currentDivision ?? '不明')}</li>
+            <li><strong>最高ランク:</strong> ${escapeHtml(rank.highestDivisionJP ?? rank.highestDivision ?? '不明')}</li>
+            <li><strong>昇格進捗:</strong> ${escapeHtml(rank.promotionProgressPercent ?? '0%')} (${escapeHtml(rank.promotionProgress ?? '-')})</li>
+            <li><strong>プレイヤーランキング:</strong> ${escapeHtml(rank.currentPlayerRanking ?? '不明')}</li>
+            <li><strong>最終更新:</strong> ${rank.lastUpdated ? new Date(rank.lastUpdated).toLocaleString() : '不明'}</li>
+            <li><strong>TrackGUID:</strong> ${escapeHtml(rank.trackguid ?? '不明')}</li>
+          </ul>
+        </div>`;
       });
-
-      rankHtml += `</tbody></table>`;
     } else {
-      rankHtml += `<div class="error">ランク情報が見つかりません。</div>`;
+      html += `<div class="card"><p>ランク情報が見つかりません。</p></div>`;
     }
 
-    rankHtml += `</div>`; // cardの閉じタグ
-    dom.innerHTML = rankHtml;
+    dom.innerHTML = html;
   } catch (err) {
-    dom.innerHTML = `<div class="error">ユーザー情報取得失敗: ${escapeHtml(err.message)}</div>`;
+    dom.innerHTML = `<div class="error">情報取得失敗: ${escapeHtml(err.message)}</div>`;
   }
 }
+
+// HTMLエスケープ関数
+function escapeHtml(text) {
+  return String(text)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
 
 
 document.getElementById('user-form').addEventListener('submit', e => {
