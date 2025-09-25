@@ -212,17 +212,7 @@ async function fetchHotfix() {
   }
 }
 
-function escapeHtml(input) {
-  if (input === null || input === undefined) return '';
-  const str = String(input);
-  return str.replace(/[&<>"']/g, m => ({
-    '&': '&amp;',
-    '<': '&lt;',
-    '>': '&gt;',
-    '"': '&quot;',
-    "'": '&#39;'
-  })[m]);
-}
+
 
 async function fetchTournaments() {
   const dom = document.getElementById('tournaments');
@@ -439,14 +429,17 @@ async function fetchUserInfo(accountId) {
   }
 }
 
-// HTMLエスケープ関数
-function escapeHtml(text) {
-  return String(text)
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#039;");
+// HTMLエスケープ関数（1回だけ定義）
+function escapeHtml(input) {
+  if (input === null || input === undefined) return '';
+  const str = String(input);
+  return str.replace(/[&<>"']/g, m => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;'
+  })[m]);
 }
 
 
