@@ -72,22 +72,56 @@ async function fetchTimeline() {
 async function fetchBuilds() {
   const dom = document.getElementById('build');
   dom.innerHTML = '<div class="loader"></div>';
+
+  function toJpDate(iso) {
+    const d = new Date(iso);
+    return `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日 ${d.getHours()}時${d.getMinutes()}分`;
+  }
+
   try {
     const res = await fetch(`https://fljpapi.vigyanfv.workers.dev/build`);
-    const builds = await res.json();
-    const html = Object.entries(builds).map(([plat, info]) => {
-      const li = [`<span class="platform-badge">${plat}</span><br><ul class="info-list">`];
-      if (info.version) li.push(`<li><strong>バージョン:</strong> ${info.version}</li>`);
-      if (info.branch) li.push(`<li><strong>ブランチ:</strong> ${info.branch}</li>`);
-      if (info.date) li.push(`<li><strong>ビルド日:</strong> ${toJpDate(info.date)}</li>`);
+    const data = await res.json();
+    const builds = data.buildsdata || data;
+
+    const html = Object.entries(builds).map(([platform, info]) => {
+      const li = [`<span class="platform-badge">${platform}</span><ul class="info-list">`];
+
+      // 基本情報
+      if (info.buildVersion) li.push(`<li><strong>ビルドバージョン:</strong> ${info.buildVersion}</li>`);
+      if (info.labelName) li.push(`<li><strong>ラベル名:</strong> ${info.labelName}</li>`);
+      if (info.expires) li.push(`<li><strong>有効期限:</strong> ${toJpDate(info.expires)}</li>`);
+
+      // CHUNKS情報
+      if (info.items?.CHUNKS) {
+        li.push('<li><strong>CHUNKS情報:</strong><ul>');
+        const chunks = info.items.CHUNKS;
+        if (chunks.distribution) li.push(`<li>配信URL: <a href="${chunks.distribution}" target="_blank">${chunks.distribution}</a></li>`);
+        if (chunks.path) li.push(`<li>パス: ${chunks.path}</li>`);
+        if (chunks.signature) li.push(`<li>署名: ${chunks.signature}</li>`);
+        li.push('</ul></li>');
+      }
+
+      // MANIFEST情報
+      if (info.items?.MANIFEST) {
+        li.push('<li><strong>MANIFEST情報:</strong><ul>');
+        const manifest = info.items.MANIFEST;
+        if (manifest.distribution) li.push(`<li>配信URL: <a href="${manifest.distribution}" target="_blank">${manifest.distribution}</a></li>`);
+        if (manifest.path) li.push(`<li>パス: ${manifest.path}</li>`);
+        if (manifest.hash) li.push(`<li>ハッシュ: ${manifest.hash}</li>`);
+        if (manifest.signature) li.push(`<li>署名: ${manifest.signature}</li>`);
+        li.push('</ul></li>');
+      }
+
       li.push('</ul>');
       return `<div class="card">${li.join('')}</div>`;
     }).join('');
+
     dom.innerHTML = `<div class="card-list">${html}</div>`;
   } catch (err) {
     dom.innerHTML = `<div class="error">ビルド情報取得失敗: ${err.message}</div>`;
   }
 }
+
 
 async function fetchStatus() {
   const dom = document.getElementById('status');
