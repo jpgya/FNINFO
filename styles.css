@@ -140,10 +140,10 @@ footer {
 
 */
 
-footer{
+footer {
   background-color: gray;
   width: 100vw;
-  position: fixed; 
-  bottom: 0;
-  margin: 0 auto;
+  margin: 40px auto 0 auto; /* 上に余白を追加（必要に応じて調整） */
+  text-align: center;
+  /* 固定しないので position, bottom は不要 */
 }
