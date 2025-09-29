@@ -140,4 +140,7 @@ footer {
 
 */
 
-
+footer{
+  background-color: gray;
+  width: 100vw;
+}
