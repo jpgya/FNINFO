@@ -123,9 +123,9 @@ body {
     padding: 16px;
   }
 }
-
+/*
 footer {
-  text-align: center;/*問題はここの部分。footer要素を真ん中に指定してるのに、実際にはできていない。そのうち修正します by莉音*/
+  text-align: center;/*問題はここの部分。footer要素を真ん中に指定してるのに、実際にはできていない。そのうち修正します by莉音
   margin-top: auto;
   bottom: 0;
   position: sticky;
@@ -138,3 +138,12 @@ footer {
   }
 }
 
+*/
+footer {
+  display: flex;
+  justify-content: center; /* 水平方向の中央揃え */
+  align-items: center;     /* 垂直方向の中央揃え */
+  background-color: #f0f0f0; /* 例として背景色を設定 */
+  height: 50px; /* 高さを指定 */
+  margin-top: auto; /* 自動で下部に配置 */
+}
