@@ -143,6 +143,6 @@ footer {
 footer{
   background-color: gray;
   width: 100vw;
-  position: sticky; 
-  bottom: 0
+  /*position: sticky; 
+  bottom: 0*/
 }
