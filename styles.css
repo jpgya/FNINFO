@@ -128,3 +128,8 @@ body {
     display: flex;
   flex-direction: column;
 }
+
+footer{
+  background-color: gray;
+  width: 100%;
+}
