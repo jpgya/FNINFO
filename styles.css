@@ -122,22 +122,6 @@ body {
     padding: 16px;
   }
 }
-/*
-footer {
-  text-align: center;/*問題はここの部分。footer要素を真ん中に指定してるのに、実際にはできていない。そのうち修正します by莉音
-  margin-top: auto;
-  bottom: 0;
-  position: sticky;
-  background-color: gray;
-  width: 100vw;
-  #ad{
-    bottom: 0;
-    background-color: gray;
-    position: sticky;
-  }
-}
-
-*/
 
 footer {
   background-color: rgb(241, 241, 241);
