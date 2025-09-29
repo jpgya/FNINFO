@@ -127,5 +127,7 @@ body {
 footer {
   text-align: center;
   margin-top: auto;
+  bottom: 0;
+  position: sticky;
 }
 
