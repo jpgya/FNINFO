@@ -139,11 +139,5 @@ footer {
 }
 
 */
-footer {
-  display: flex;
-  justify-content: center; /* 水平方向の中央揃え */
-  align-items: center;     /* 垂直方向の中央揃え */
-  background-color: #f0f0f0; /* 例として背景色を設定 */
-  height: 50px; /* 高さを指定 */
-  margin-top: auto; /* 自動で下部に配置 */
-}
+
+
