@@ -123,3 +123,8 @@ body {
     padding: 16px;
   }
 }
+#AD {
+  margin-top: auto;
+    display: flex;
+  flex-direction: column;
+}
