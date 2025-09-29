@@ -33,9 +33,6 @@ body {
   font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, "Noto Sans JP", Helvetica, Arial, sans-serif;
   color: var(--text);
   min-height: 100vh;
-  text-align: center;
-  width: 100%;
-  margin: 100px auto 0 auto;
 }
 
 
