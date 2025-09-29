@@ -35,11 +35,13 @@ body {
   background: var(--bg);
   min-height: 100vh;
   text-align: center;
+  padding-top: 40px; /* ページ上部に余白追加 */
 }
 
 .header {
   text-align: center;
-  margin-bottom: 40px;
+  margin-top: 40px;    /* 上の余白追加 */
+  margin-bottom: 60px; /* 下の余白を広げる */
   animation: slide-in 0.5s ease-out;
 }
 
@@ -62,7 +64,7 @@ body {
 
 .grid {
   display: grid;
-  gap: 20px;
+  gap: 24px; /* カード間隔を広げる */
 }
 
 /* 3列グリッドを自動調整 */
@@ -135,7 +137,7 @@ footer {
   background-color: var(--panel);
   color: var(--text);
   width: 100%;
-  margin: 100px auto 0 auto;
+  margin-top: 80px; /* 上との距離を広げる */
   text-align: center;
-  padding: 20px 0;
+  padding: 30px 0;  /* 内側余白を広げる */
 }
