@@ -197,10 +197,10 @@ async function fetchHotfix() {
         `<ul class="info-list">`,
         `<li><strong>ファイル名:</strong> ${file.filename}</li>`,
         `<li><strong>サイズ:</strong> ${file.length} バイト</li>`,
-        `<li><strong>アップロード日:</strong> ${toJpDate(file.uploaded)}</li>`,
+        `<li><strong>更新日:</strong> ${toJpDate(file.uploaded)}</li>`,
         `<li><strong>ハッシュ:</strong> ${file.hash}</li>`,
         `<li><strong>SHA256:</strong> ${file.hash256}</li>`,
-        `<li><strong>ユニーク名:</strong> ${file.uniqueFilename}</li>`,
+        `<li><strong>ストレージ識別子:</strong> ${file.uniqueFilename}</li>`,
         `</ul>`
       ];
       return `<div class="card">${li.join('')}</div>`;
