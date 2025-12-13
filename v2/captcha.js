@@ -3,9 +3,9 @@ export class Check {
 
   constructor(config = {}) {
     this.config = config.captchaData || [
-      { id: 1, url: 'https://via.placeholder.com/100?text=猫', label: '猫', isCorrect: true },
-      { id: 2, url: 'https://via.placeholder.com/100?text=犬', label: '犬', isCorrect: false },
-      { id: 3, url: 'https://via.placeholder.com/100?text=車', label: '車', isCorrect: false }
+      { id: 1, url: '', label: '猫', isCorrect: true },
+      { id: 2, url: '', label: '犬', isCorrect: false },
+      { id: 3, url: '', label: '車', isCorrect: false }
     ];
     this.container = null;
     this.resultInput = null;
