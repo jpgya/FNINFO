@@ -26,8 +26,6 @@ GitHub Pages 上でホストされ、インストール不要で利用可能で�
 - [FLJP API v2](https://fljpapi.jp/)（非公式フォートナイトAPI）
 - GitHub Pages（ホスティング）
 - GitHub Actions（自動デプロイ）
-- [Mero.CAPCHA](https://github.com/dev-Kanade/New-CAPTCHA)(APIリクエスト時にDossなどでレート制限に達さないようにするシステム)
-
 ## 利用規約
 - 本サイトは Epic Games, Inc. とは一切関係ありません。
 - API 利用規約に従って使用してください。
